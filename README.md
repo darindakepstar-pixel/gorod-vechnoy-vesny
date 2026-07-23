@@ -83,3 +83,64 @@ ch3_05: { bg:'city', text:'Он ждёт ответа.',
 
 Мини-игры, создание персонажа, комната, музыка, генератор обложки, главы 3–7.
 Всё это навешивается на готовое ядро.
+STYLE:
+
+high-end visual novel illustration,
+
+stylized semi-realistic,
+
+Romance Club inspired,
+
+soft cel shading,
+
+subtle painterly rendering,
+
+clean elegant line art,
+
+smooth gradients,
+
+cinematic lighting,
+
+fashion illustration influence,
+
+pastel base palette with muted cream, lilac and charcoal tones,
+
+neon teal and magenta accents,
+
+slightly desaturated for dialogue readability,
+
+modern Chinese urban atmosphere,
+
+high consistency,
+
+illustration,
+
+no anime,
+
+no photorealism,
+
+no 3D TECH:
+
+wide establishing shot,
+
+16:9 composition,
+
+empty location,
+
+no people,
+
+no characters,
+
+slightly blurred distant background,
+
+comfortable negative space for dialogue box,
+
+soft cinematic lighting,
+
+high detail,
+
+no text,
+
+no logos,
+
+no watermark
