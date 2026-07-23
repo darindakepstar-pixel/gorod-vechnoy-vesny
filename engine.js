@@ -66,43 +66,14 @@ let state, typing = null, typeFull = '', typeDone = null,
 
 const STAT_NAMES = { lang:'китайский', money:'деньги', rep:'репутация' };
 
-/* ---------- хранилище: локально + облако ---------- */
-const Cloud = {
-  ready: false, sb: null,
-  async init(){
-    if(!window.CONFIG || !CONFIG.supabaseUrl || CONFIG.supabaseUrl.includes('ВСТАВЬ')) return;
-    try{
-      const m = await import('https://esm.sh/@supabase/supabase-js@2');
-      this.sb = m.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
-      this.ready = true;
-    }catch(e){ console.warn('Облако недоступно, играем локально', e); }
-  },
-  async register(id, nick){
-    if(!this.ready) return;
-    try{ await this.sb.from('players').upsert({id, nickname:nick}); }catch(e){}
-  },
-  async push(slot, data){
-    if(!this.ready || !playerId) return;
-    try{ await this.sb.from('saves').upsert({player_id:playerId, slot, state:data, updated_at:new Date()}); }catch(e){}
-  },
-  async pull(slot){
-    if(!this.ready || !playerId) return null;
-    try{
-      const {data} = await this.sb.from('saves').select('state').eq('player_id',playerId).eq('slot',slot).maybeSingle();
-      return data ? data.state : null;
-    }catch(e){ return null; }
-  },
-  async ending(id){
-    if(!this.ready || !playerId) return;
-    try{ await this.sb.from('endings').upsert({player_id:playerId, ending_id:id}); }catch(e){}
-  }
-};
-
 /* ---------- состояние ---------- */
 function fresh(){
   return { scene:'ch1_01', love:{lei:0,tank:0,shen:0},
-           stats:{lang:0, money:0, rep:0}, flags:[], chapter:'', log:[] };
+           stats:{lang:0, money:0, rep:0}, flags:[], chapter:'',
+           log:[], seen:[], playedMs:0 };
 }
+
+const TOTAL_SCENES = Object.keys(SCENES).length;
 
 /* ---------- статы и всплывающие уведомления ---------- */
 function paintStats(){
@@ -242,6 +213,8 @@ async function show(id){
   if(s.love) applyLove(s.love);
   if(s.flags) s.flags.forEach(f => { if(!state.flags.includes(f)) state.flags.push(f); });
 
+  if(!state.seen) state.seen = [];
+  if(!state.seen.includes(id)) state.seen.push(id);
   state.log.push({who:s.who||'', text:s.text});
   if(state.log.length > 400) state.log.shift();
 
@@ -250,7 +223,7 @@ async function show(id){
   $('choices').innerHTML = '';
   const runText = () => type(s.text, () => {
     if(s.choices) renderChoices(s.choices);
-    else if(s.ending){ Cloud.ending(id); renderChoices([{text:'Вернуться на титул', next:'__title'}]); }
+    else if(s.ending){ Cloud.markEnding(id); renderChoices([{text:'Вернуться на титул', next:'__title'}]); }
   });
   if(s.card){
     /* карточка перехода заодно прикрывает загрузку */
@@ -323,7 +296,20 @@ function advance(e){
 }
 
 /* ---------- сохранения ---------- */
-function autosave(){ localStorage.setItem(LS+'auto', JSON.stringify(state)); Cloud.push('auto', state); }
+function autosave(){
+  localStorage.setItem(LS+'auto', JSON.stringify(state));
+  Cloud.push('auto', state);
+}
+
+/* счётчик времени в игре */
+let tick = null;
+function startClock(){
+  clearInterval(tick);
+  tick = setInterval(() => {
+    if($('title').style.display !== 'none') return;
+    state.playedMs = (state.playedMs || 0) + 10000;
+  }, 10000);
+}
 
 function save(slot){
   localStorage.setItem(LS+slot, JSON.stringify(state));
@@ -337,6 +323,7 @@ async function load(slot){
   if(!raw){ alert('Пустой слот.'); return; }
   state = raw;
   if(!state.stats) state.stats = {lang:0, money:0, rep:0};
+  if(!state.seen) state.seen = [];
   paintStats();
   closeAll();
   $('title').style.display = 'none';
@@ -345,20 +332,89 @@ async function load(slot){
 
 /* ---------- запуск ---------- */
 async function start(cont){
-  nickname = ($('nick').value || 'без имени').trim();
-  localStorage.setItem(LS+'nick', nickname);
-  playerId = localStorage.getItem(LS+'pid');
-  if(!playerId){ playerId = crypto.randomUUID(); localStorage.setItem(LS+'pid', playerId); }
-  Cloud.register(playerId, nickname);
-
-  if(cont){ await load('auto'); return; }
+  const box = $('localbox');
+  if(box.style.display !== 'none'){
+    nickname = ($('nick2').value || 'без имени').trim();
+    localStorage.setItem(LS+'nick', nickname);
+  }
+  if(cont){ await load('auto'); startClock(); return; }
   state = fresh();
   paintStats();
   $('title').style.display = 'none';
+  startClock();
   show(state.scene);
 }
 
-function toTitle(){ closeAll(); $('title').style.display='flex'; }
+/* ---------- вход и профиль ---------- */
+function authErr(msg){ $('autherr').textContent = msg || ''; }
+
+function showTitleMode(){
+  const cloud = Cloud.on(), me = Cloud.user();
+  $('authbox').style.display    = (cloud && !me) ? 'flex' : 'none';
+  $('localbox').style.display   = (!cloud) ? 'flex' : 'none';
+  $('profilebox').style.display = (cloud && me) ? 'flex' : 'none';
+  $('cloudstate').textContent   = cloud
+    ? (me ? 'аккаунт подключён' : 'облако подключено')
+    : 'локальный режим · сохранения только на этом устройстве';
+  if(cloud && me) paintProfile();
+}
+
+async function paintProfile(){
+  const c = $('profcard');
+  c.innerHTML = '<div style="opacity:.6;font-size:13px">Загружаю…</div>';
+  const st = await Cloud.myStats();
+  if(!st){ c.innerHTML = '<div style="opacity:.6;font-size:13px">Не удалось получить данные.</div>'; return; }
+  const s = st.state || {};
+  const seen = (s.seen || []).length;
+  const pct = Math.round(seen / TOTAL_SCENES * 100);
+  const mins = Math.round((s.playedMs || 0) / 60000);
+  const when = st.updated ? new Date(st.updated).toLocaleString('ru-RU',
+      {day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'}) : '—';
+  c.innerHTML = `
+    <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:10px">${st.nickname || 'Ты'}</div>
+    <div class="pline"><span>Остановилась на</span><b>${s.chapter || 'самом начале'}</b></div>
+    <div class="pline"><span>Прочитано сцен</span><b>${seen} из ${TOTAL_SCENES}</b></div>
+    <div class="pline"><span>Время в игре</span><b>${mins} мин</b></div>
+    <div class="pline"><span>Найдено концовок</span><b>${st.endings}</b></div>
+    <div class="pline"><span>Последний раз</span><b style="font-weight:400;color:#fff;opacity:.8">${when}</b></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>`;
+}
+
+async function doLogin(){
+  authErr('');
+  const n = $('nick').value.trim(), p = $('pass').value;
+  if(!n || p.length < 6) return authErr('Нужно имя и пароль хотя бы из 6 знаков.');
+  try{ await Cloud.signIn(n, p); showTitleMode(); }
+  catch(e){ authErr(e.status === 400 ? 'Неверное имя или пароль.' : 'Не вышло войти: ' + e.message); }
+}
+
+async function doRegister(){
+  authErr('');
+  const n = $('nick').value.trim(), p = $('pass').value;
+  if(!n || p.length < 6) return authErr('Нужно имя и пароль хотя бы из 6 знаков.');
+  try{ await Cloud.signUp(n, p); showTitleMode(); }
+  catch(e){ authErr(e.status === 422 ? 'Такое имя уже занято.' : e.message); }
+}
+
+function doLogout(){ Cloud.signOut(); showTitleMode(); }
+function playLocal(){ $('authbox').style.display='none'; $('localbox').style.display='flex'; }
+function confirmNew(){
+  if(confirm('Начать заново? Текущее сохранение перезапишется.')) start(false);
+}
+
+async function openBoard(){
+  const b = $('boardbody');
+  b.innerHTML = '<div style="opacity:.6">Загружаю…</div>';
+  $('board').classList.add('on');
+  const rows = await Cloud.leaderboard();
+  if(!rows.length){ b.innerHTML = '<div style="opacity:.6">Пока никого. Ты первая.</div>'; return; }
+  b.innerHTML = rows.map(r => `<div class="logline">
+      <b>${r.nickname || '—'}</b> · ${r.scenes_seen || 0} сцен · ${r.endings_found || 0} концовок
+      <div style="opacity:.55;font-size:12px">${r.chapter || 'ещё не начала'} · ${r.minutes || 0} мин</div>
+    </div>`).join('');
+}
+
+function toTitle(){ closeAll(); $('title').style.display='flex'; showTitleMode(); }
 function openMenu(){ $('menu').classList.add('on'); }
 function openLog(){
   $('logbody').innerHTML = state.log.slice(-120).map(l =>
@@ -405,7 +461,8 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
 /* ---------- инициализация ---------- */
 (async function(){
   state = fresh();
-  const n = localStorage.getItem(LS+'nick'); if(n) $('nick').value = n;
+  const n = localStorage.getItem(LS+'nick');
+  if(n){ $('nick').value = n; $('nick2').value = n; }
   const sp = localStorage.getItem(LS+'speed'); if(sp){ speed = +sp; $('speed').value = sp; }
   /* фон титульного экрана, если картинка есть */
   const tbg = new Image();
@@ -418,13 +475,15 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
   });
   setTimeout(preloadAll, 2500);
 
-  await Cloud.init();
-  $('cloudstate').textContent = Cloud.ready ? 'облако подключено' : 'локальный режим';
+  Cloud.init();
+  showTitleMode();
   document.addEventListener('keydown', e => {
     if(e.code === 'Space' || e.code === 'Enter') advance();
     if(e.code === 'KeyD') toggleDebug();
   });
 })();
 
-return { start, advance, save, load, openMenu, openLog, openGallery, closeAll, setSpeed, toggleDebug, toTitle, spriteFallback, skipCard };
+return { start, advance, save, load, openMenu, openLog, openGallery, closeAll,
+         setSpeed, toggleDebug, toTitle, spriteFallback, skipCard,
+         doLogin, doRegister, doLogout, playLocal, confirmNew, openBoard };
 })();
