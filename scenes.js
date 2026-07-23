@@ -35,6 +35,8 @@ const BACKGROUNDS = {
   meeting:  { name: 'Переговорная',      css: 'linear-gradient(180deg,#dfe6ee,#9fb0c4)' },
   elevator: { name: 'Лифт',              css: 'linear-gradient(180deg,#7d818a,#4e5158)' },
   city:     { name: 'Ночной Куньмин',    css: 'linear-gradient(180deg,#1c2340,#3d2b52)' },
+  studio:   { name: 'Студия звукозаписи',css: 'linear-gradient(180deg,#3a3129,#241d19)' },
+  lounge:   { name: 'VIP-лаунж',         css: 'linear-gradient(180deg,#2e2438,#151119)' },
 };
 
 const SCENES = {
