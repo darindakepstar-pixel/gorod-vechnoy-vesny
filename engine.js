@@ -365,6 +365,39 @@ function openLog(){
     `<div class="logline">${l.who ? '<b>'+l.who+':</b> ' : ''}${l.text}</div>`).join('');
   $('log').classList.add('on');
 }
+async function openGallery(){
+  const box = $('galbody');
+  box.innerHTML = '<div style="opacity:.6">Загружаю…</div>';
+  $('gallery').classList.add('on');
+
+  const used = {}, firstScene = {};
+  for(const [id, s] of Object.entries(SCENES)){
+    if(!s.bg) continue;
+    used[s.bg] = (used[s.bg] || 0) + 1;
+    if(!firstScene[s.bg]) firstScene[s.bg] = id;
+  }
+
+  box.innerHTML = '';
+  for(const key of Object.keys(BACKGROUNDS)){
+    const url = ART + 'bg_' + key + '.jpg';
+    const exists = await has(url);
+    const n = used[key] || 0;
+    const card = document.createElement('button');
+    card.className = 'gcard';
+    card.innerHTML = `
+      <span class="thumb" style="background-image:${exists ? `url(${url})` : 'none'};
+            ${exists ? '' : 'background:' + BACKGROUNDS[key].css}"></span>
+      <span class="cap">
+        <b><i class="gdot" style="background:${exists ? (n ? '#3ff2d0' : '#888') : '#ff5d7a'}"></i>
+           ${BACKGROUNDS[key].name}</b>
+        <span class="cnt">${exists ? '' : 'файла нет · '}${n ? n + ' сцен' : 'сцен пока нет'}</span>
+      </span>`;
+    if(n) card.onclick = () => { closeAll(); show(firstScene[key]); };
+    else card.onclick = () => alert('Для этого фона ещё не написано ни одной сцены.');
+    box.appendChild(card);
+  }
+}
+
 function closeAll(){ document.querySelectorAll('.overlay').forEach(o => o.classList.remove('on')); }
 function setSpeed(v){ speed = +v; localStorage.setItem(LS+'speed', v); }
 function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', debugOn); paintDebug(); }
@@ -393,5 +426,5 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
   });
 })();
 
-return { start, advance, save, load, openMenu, openLog, closeAll, setSpeed, toggleDebug, toTitle, spriteFallback, skipCard };
+return { start, advance, save, load, openMenu, openLog, openGallery, closeAll, setSpeed, toggleDebug, toTitle, spriteFallback, skipCard };
 })();
