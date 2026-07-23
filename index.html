@@ -97,6 +97,13 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
   border-radius:10px;color:#fff;padding:11px 13px;font-size:15px;font-family:inherit;width:100%}
 .logline{border-bottom:1px solid rgba(255,255,255,.1);padding:9px 0;font-size:14px;line-height:1.5}
 .logline b{color:var(--pink)}
+.gcard{border:1px solid var(--line);border-radius:11px;overflow:hidden;
+  background:rgba(255,255,255,.05);cursor:pointer;text-align:left;padding:0;color:#fff}
+.gcard .thumb{width:100%;aspect-ratio:16/9;background:#222 center/cover no-repeat;display:block}
+.gcard .cap{padding:7px 9px;font-size:12px;line-height:1.4}
+.gcard .cap b{display:flex;align-items:center;gap:6px;font-size:12px}
+.gdot{width:7px;height:7px;border-radius:50%;flex:none}
+.gcard .cnt{opacity:.6;font-size:11px}
 
 /* ---- титульный экран ---- */
 #title{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;
@@ -218,9 +225,22 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
   <p style="font-size:13px;opacity:.7;margin:6px 0 18px">Левее — быстрее. В самом левом положении текст появляется сразу.</p>
 
   <div class="row" style="margin-top:auto">
+    <button class="abtn ghost" onclick="Game.openGallery()">Галерея фонов</button>
     <button class="abtn ghost" onclick="Game.toggleDebug()">Отладка вкл/выкл</button>
     <button class="abtn ghost" onclick="Game.toTitle()">На титул</button>
     <button class="abtn" onclick="Game.closeAll()">Назад в игру</button>
+  </div>
+</div>
+
+<!-- галерея фонов -->
+<div class="overlay" id="gallery">
+  <h2>Галерея фонов</h2>
+  <p style="font-size:13px;opacity:.7;margin:0 0 14px">
+    Зелёная точка — файл есть. Серая — сцен пока нет, показать негде.
+    Нажми на карточку, чтобы прыгнуть в первую сцену с этим фоном.</p>
+  <div id="galbody" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px"></div>
+  <div class="row" style="margin-top:18px">
+    <button class="abtn" onclick="Game.closeAll()">Назад</button>
   </div>
 </div>
 
