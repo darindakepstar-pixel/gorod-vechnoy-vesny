@@ -1,8 +1,16 @@
-/* Настройки подключения к Supabase.
-   Пока тут заглушки — игра работает локально.
-   Вставь свои значения, и появятся аккаунты и общая статистика.
-   Ключ anon публичный, его можно держать в коде — доступ ограничиваетсяправилами RLS. */
+/* Настройки игры. */
 const CONFIG = {
-  supabaseUrl: 'ВСТАВЬ_СЮДА_URL',
-  supabaseKey: 'ВСТАВЬ_СЮДА_ANON_KEY',
+
+  /* Supabase — аккаунты и облачные сохранения.
+     Пока стоят заглушки, игра работает локально. */
+  supabaseUrl: 'https://xmgyqucozetjvljjphby.supabase.co',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtZ3lxdWNvemV0anZsampwaGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3OTgyMzksImV4cCI6MjEwMDM3NDIzOX0.aqWmuO2vpF_8hmUPnY8z_sHiC0jh2qDQdSStrnhVPdY',
+
+  /* Откуда игра берёт картинки.
+     Пусто  -> из папки art/ рядом с index.html (обычный вариант).
+     Ссылка -> из интернета, например из Supabase Storage.
+     В конце обязательно слэш! Пример:
+     artBase: 'https://xxxx.supabase.co/storage/v1/object/public/art/', */
+  artBase: '',
+
 };
