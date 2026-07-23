@@ -8,6 +8,58 @@ const $ = id => document.getElementById(id);
 const LS = 'gvv_';
 const ART = (window.CONFIG && CONFIG.artBase) ? CONFIG.artBase : 'art/';
 
+/* ---------- кэш картинок ----------
+   Каждый файл грузится один раз. Промис помнит, получилось или нет,
+   чтобы движок заранее знал, есть ли такая картинка вообще. */
+const imgCache = new Map();
+function ensure(url){
+  if(imgCache.has(url)) return imgCache.get(url);
+  const pr = new Promise(res => {
+    const im = new Image();
+    im.onload  = () => res(true);
+    im.onerror = () => res(false);
+    im.src = url;
+  });
+  imgCache.set(url, pr);
+  return pr;
+}
+const okCache = new Map();
+async function has(url){
+  if(okCache.has(url)) return okCache.get(url);
+  const r = await ensure(url); okCache.set(url, r); return r;
+}
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+/* какие файлы нужны сцене */
+function sceneAssets(s){
+  const a = [];
+  if(s.bg) a.push(ART + 'bg_' + s.bg + '.jpg');
+  if(s.cg) a.push(ART + 'cg_' + s.cg + '.jpg');
+  if(s.sprite) a.push(ART + s.sprite.char + '_' + s.sprite.emo + '.png',
+                      ART + s.sprite.char + '_neutral.png');
+  if(s.items) s.items.forEach(i => a.push(ART + 'item_' + i.img + '.png'));
+  return a;
+}
+
+/* подтягиваем всё, куда сцена может привести */
+function prefetchNext(s){
+  const next = [];
+  if(s.next) next.push(s.next);
+  if(s.choices) s.choices.forEach(c => c.next && next.push(c.next));
+  next.forEach(id => { const n = SCENES[id]; if(n) sceneAssets(n).forEach(ensure); });
+}
+
+/* фоновая догрузка всего остального, когда движок простаивает */
+function preloadAll(){
+  const all = new Set();
+  Object.values(SCENES).forEach(s => sceneAssets(s).forEach(u => all.add(u)));
+  const list = [...all]; let i = 0;
+  (function step(){
+    if(i >= list.length) return;
+    ensure(list[i++]).then(() => setTimeout(step, 60));
+  })();
+}
+
 let state, typing = null, typeFull = '', typeDone = null,
     speed = 22, debugOn = false, playerId = null, nickname = '',
     cardTimer = null, cardAfter = null;
@@ -97,15 +149,13 @@ function skipCard(){
 }
 
 /* ---------- отрисовка ---------- */
-function paintBG(key){
+async function paintBG(key){
   const b = BACKGROUNDS[key];
   const el = $('bg');
   if(!b){ el.style.background = '#222'; return; }
-  /* Ищем art/bg_ключ.jpg. Пока файла нет — используется заливка из scenes.js. */
-  el.style.background = b.css;
-  const probe = new Image();
-  probe.onload = () => { el.style.background = `url(${ART}bg_${key}.jpg) center/cover no-repeat`; };
-  probe.src = ART + 'bg_' + key + '.jpg';
+  const url = ART + 'bg_' + key + '.jpg';
+  if(await has(url)) el.style.background = `url(${url}) center/cover no-repeat`;
+  else el.style.background = b.css;   /* картинки нет — заливка из scenes.js */
 }
 
 function paintItems(list){
@@ -168,15 +218,20 @@ function paintDebug(){
 }
 
 /* ---------- показ сцены ---------- */
-function show(id){
+async function show(id){
   const s = SCENES[id];
   if(!s){ console.error('Нет сцены:', id); return; }
   state.scene = id;
 
+  /* картинки этой сцены грузим ДО текста, но не дольше полутора секунд,
+     чтобы игра не зависла на плохой связи */
+  const assets = Promise.all(sceneAssets(s).map(ensure));
+  if(!s.card) await Promise.race([assets, wait(1500)]);
+
   if(s.chapter){ state.chapter = s.chapter; }
   $('chapter').textContent = state.chapter;
 
-  paintBG(s.bg);
+  await paintBG(s.bg);
   paintCG(s.cg);
   paintItems(s.items);
   paintSprite(s.cg ? null : s.sprite);   /* на иллюстрации персонажи уже нарисованы */
@@ -197,7 +252,13 @@ function show(id){
     if(s.choices) renderChoices(s.choices);
     else if(s.ending){ Cloud.ending(id); renderChoices([{text:'Вернуться на титул', next:'__title'}]); }
   });
-  if(s.card){ $('text').textContent = ''; showCard(s.card, runText); } else runText();
+  if(s.card){
+    /* карточка перехода заодно прикрывает загрузку */
+    $('text').textContent = '';
+    showCard(s.card, runText);
+    assets.then(() => {});
+  } else runText();
+  prefetchNext(s);
 
   paintDebug();
   autosave();
@@ -317,6 +378,12 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
   const tbg = new Image();
   tbg.onload = () => { $('title').style.backgroundImage = `url(${ART}bg_title.jpg)`; };
   tbg.src = ART + 'bg_title.jpg';
+
+  /* заранее греем первые сцены, чтобы старт был мгновенным */
+  ['ch1_01','ch1_02','ch1_10','ch1_23'].forEach(id => {
+    const s = SCENES[id]; if(s) sceneAssets(s).forEach(ensure);
+  });
+  setTimeout(preloadAll, 2500);
 
   await Cloud.init();
   $('cloudstate').textContent = Cloud.ready ? 'облако подключено' : 'локальный режим';
