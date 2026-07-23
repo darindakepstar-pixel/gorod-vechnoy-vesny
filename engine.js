@@ -30,6 +30,19 @@ async function has(url){
 }
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
+/* ---------- облако ----------
+   Если cloud.js не подключён, подставляем заглушку: игра должна
+   работать локально, а не падать целиком. */
+const CLOUD_MISSING = (typeof Cloud === 'undefined');
+const CL = CLOUD_MISSING ? {
+  init:()=>false, on:()=>false, user:()=>null,
+  push:()=>{}, pull:async()=>null, markEnding:()=>{},
+  myStats:async()=>null, leaderboard:async()=>[],
+  signIn(){ throw new Error('Файл cloud.js не найден.'); },
+  signUp(){ throw new Error('Файл cloud.js не найден.'); },
+  signOut(){}
+} : Cloud;
+
 /* какие файлы нужны сцене */
 function sceneAssets(s){
   const a = [];
@@ -223,7 +236,7 @@ async function show(id){
   $('choices').innerHTML = '';
   const runText = () => type(s.text, () => {
     if(s.choices) renderChoices(s.choices);
-    else if(s.ending){ Cloud.markEnding(id); renderChoices([{text:'Вернуться на титул', next:'__title'}]); }
+    else if(s.ending){ CL.markEnding(id); renderChoices([{text:'Вернуться на титул', next:'__title'}]); }
   });
   if(s.card){
     /* карточка перехода заодно прикрывает загрузку */
@@ -298,7 +311,7 @@ function advance(e){
 /* ---------- сохранения ---------- */
 function autosave(){
   localStorage.setItem(LS+'auto', JSON.stringify(state));
-  Cloud.push('auto', state);
+  CL.push('auto', state);
 }
 
 /* счётчик времени в игре */
@@ -313,12 +326,12 @@ function startClock(){
 
 function save(slot){
   localStorage.setItem(LS+slot, JSON.stringify(state));
-  Cloud.push(slot, state);
+  CL.push(slot, state);
   alert('Сохранено.');
 }
 
 async function load(slot){
-  let raw = await Cloud.pull(slot);
+  let raw = await CL.pull(slot);
   if(!raw){ const l = localStorage.getItem(LS+slot); raw = l ? JSON.parse(l) : null; }
   if(!raw){ alert('Пустой слот.'); return; }
   state = raw;
@@ -349,20 +362,22 @@ async function start(cont){
 function authErr(msg){ $('autherr').textContent = msg || ''; }
 
 function showTitleMode(){
-  const cloud = Cloud.on(), me = Cloud.user();
+  const cloud = CL.on(), me = CL.user();
   $('authbox').style.display    = (cloud && !me) ? 'flex' : 'none';
   $('localbox').style.display   = (!cloud) ? 'flex' : 'none';
   $('profilebox').style.display = (cloud && me) ? 'flex' : 'none';
   $('cloudstate').textContent   = cloud
     ? (me ? 'аккаунт подключён' : 'облако подключено')
-    : 'локальный режим · сохранения только на этом устройстве';
+    : (CLOUD_MISSING
+        ? 'файл cloud.js не найден · аккаунты выключены'
+        : 'локальный режим · сохранения только на этом устройстве');
   if(cloud && me) paintProfile();
 }
 
 async function paintProfile(){
   const c = $('profcard');
   c.innerHTML = '<div style="opacity:.6;font-size:13px">Загружаю…</div>';
-  const st = await Cloud.myStats();
+  const st = await CL.myStats();
   if(!st){ c.innerHTML = '<div style="opacity:.6;font-size:13px">Не удалось получить данные.</div>'; return; }
   const s = st.state || {};
   const seen = (s.seen || []).length;
@@ -384,7 +399,7 @@ async function doLogin(){
   authErr('');
   const n = $('nick').value.trim(), p = $('pass').value;
   if(!n || p.length < 6) return authErr('Нужно имя и пароль хотя бы из 6 знаков.');
-  try{ await Cloud.signIn(n, p); showTitleMode(); }
+  try{ await CL.signIn(n, p); showTitleMode(); }
   catch(e){ authErr(e.status === 400 ? 'Неверное имя или пароль.' : 'Не вышло войти: ' + e.message); }
 }
 
@@ -392,11 +407,11 @@ async function doRegister(){
   authErr('');
   const n = $('nick').value.trim(), p = $('pass').value;
   if(!n || p.length < 6) return authErr('Нужно имя и пароль хотя бы из 6 знаков.');
-  try{ await Cloud.signUp(n, p); showTitleMode(); }
+  try{ await CL.signUp(n, p); showTitleMode(); }
   catch(e){ authErr(e.status === 422 ? 'Такое имя уже занято.' : e.message); }
 }
 
-function doLogout(){ Cloud.signOut(); showTitleMode(); }
+function doLogout(){ CL.signOut(); showTitleMode(); }
 function playLocal(){ $('authbox').style.display='none'; $('localbox').style.display='flex'; }
 function confirmNew(){
   if(confirm('Начать заново? Текущее сохранение перезапишется.')) start(false);
@@ -406,7 +421,7 @@ async function openBoard(){
   const b = $('boardbody');
   b.innerHTML = '<div style="opacity:.6">Загружаю…</div>';
   $('board').classList.add('on');
-  const rows = await Cloud.leaderboard();
+  const rows = await CL.leaderboard();
   if(!rows.length){ b.innerHTML = '<div style="opacity:.6">Пока никого. Ты первая.</div>'; return; }
   b.innerHTML = rows.map(r => `<div class="logline">
       <b>${r.nickname || '—'}</b> · ${r.scenes_seen || 0} сцен · ${r.endings_found || 0} концовок
@@ -460,6 +475,7 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
 
 /* ---------- инициализация ---------- */
 (async function(){
+ try {
   state = fresh();
   const n = localStorage.getItem(LS+'nick');
   if(n){ $('nick').value = n; $('nick2').value = n; }
@@ -475,12 +491,18 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
   });
   setTimeout(preloadAll, 2500);
 
-  Cloud.init();
+  CL.init();
   showTitleMode();
   document.addEventListener('keydown', e => {
     if(e.code === 'Space' || e.code === 'Enter') advance();
     if(e.code === 'KeyD') toggleDebug();
   });
+ } catch(err) {
+  /* что бы ни сломалось при запуске — титул должен остаться рабочим */
+  console.error('Сбой при запуске:', err);
+  $('localbox').style.display = 'flex';
+  $('cloudstate').textContent = 'сбой при запуске: ' + err.message;
+ }
 })();
 
 return { start, advance, save, load, openMenu, openLog, openGallery, closeAll,
