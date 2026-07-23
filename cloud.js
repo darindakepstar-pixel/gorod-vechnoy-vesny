@@ -157,3 +157,5 @@ function init(){
 
 return { init, on, signUp, signIn, signOut, user, push, pull, markEnding, myStats, leaderboard };
 })();
+
+window.Cloud = Cloud;   /* чтобы движок мог проверить, загрузились ли мы */
