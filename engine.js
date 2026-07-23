@@ -50,20 +50,42 @@ function fresh(){
 /* ---------- отрисовка ---------- */
 function paintBG(key){
   const b = BACKGROUNDS[key];
-  $('bg').style.background = b ? b.css : '#222';
+  const el = $('bg');
+  if(!b){ el.style.background = '#222'; return; }
+  /* Ищем art/bg_ключ.jpg. Пока файла нет — используется заливка из scenes.js. */
+  el.style.background = b.css;
+  const probe = new Image();
+  probe.onload = () => { el.style.background = `url(art/bg_${key}.jpg) center/cover no-repeat`; };
+  probe.src = `art/bg_${key}.jpg`;
 }
 
 function paintSprite(sp){
   const box = $('sprites');
-  if(!sp){ box.innerHTML=''; return; }
+  if(!sp){ box.innerHTML=''; box.dataset.cur=''; return; }
   const c = CHARS[sp.char];
-  if(!c){ box.innerHTML=''; return; }
+  if(!c){ box.innerHTML=''; box.dataset.cur=''; return; }
   if(box.dataset.cur === sp.char + sp.emo) return;
   box.dataset.cur = sp.char + sp.emo;
-  box.innerHTML = `<div class="sprite" style="background:linear-gradient(180deg,${c.color}cc,${c.color}66)">
+
+  /* Ищем art/имя_эмоция.png. Если файла нет — показываем заглушку. */
+  box.innerHTML = `<img class="sprite-img" src="art/${sp.char}_${sp.emo}.png"
+      alt="${c.name}" onerror="Game.spriteFallback(this,'${sp.char}','${sp.emo}')">`;
+}
+
+function spriteFallback(img, char, emo){
+  const want = img.dataset.want || emo;
+  /* нужной эмоции нет — пробуем нейтральную того же персонажа */
+  if(emo !== 'neutral'){
+    img.dataset.want = want;
+    img.setAttribute('onerror', `Game.spriteFallback(this,'${char}','neutral')`);
+    img.src = `art/${char}_neutral.png`;
+    return;
+  }
+  const c = CHARS[char];
+  img.outerHTML = `<div class="sprite" style="background:linear-gradient(180deg,${c.color}cc,${c.color}66)">
       <div class="nm">${c.name}</div>
-      <div class="emo">${sp.emo}</div>
-      <div class="ph">заглушка<br>сюда придёт твой рисунок</div>
+      <div class="emo">${want}</div>
+      <div class="ph">заглушка<br>положи art/${char}_${want}.png</div>
     </div>`;
 }
 
@@ -219,5 +241,5 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
   });
 })();
 
-return { start, advance, save, load, openMenu, openLog, closeAll, setSpeed, toggleDebug, toTitle };
+return { start, advance, save, load, openMenu, openLog, closeAll, setSpeed, toggleDebug, toTitle, spriteFallback };
 })();
