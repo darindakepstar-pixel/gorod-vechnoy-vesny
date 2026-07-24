@@ -124,6 +124,15 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
 .mg-card.done{opacity:.28;border-color:transparent;pointer-events:none}
 @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .mg-foot{text-align:center;margin-top:16px;font-size:14px;opacity:.8}
+.ly-line{font-size:clamp(17px,4.6vw,22px);line-height:1.7;text-align:center;
+  margin:6px 0 20px;color:#fff}
+.ly-line u{text-decoration:none;border-bottom:2px solid var(--neon);opacity:.9}
+.ly-opts{display:flex;flex-direction:column;gap:9px}
+.ly-opts button:disabled{opacity:.4}
+.ly-good{border-color:var(--neon)!important;background:rgba(63,242,208,.2)!important;opacity:1!important}
+.ly-meh{border-color:#ffd166!important;background:rgba(255,209,102,.15)!important;opacity:1!important}
+.ly-note{margin-top:16px;padding:12px 14px;border-left:2px solid var(--pink);
+  font-size:14px;line-height:1.6;opacity:.92;animation:pop .3s ease}
 .mg-start{background:linear-gradient(180deg,rgba(63,242,208,.3),rgba(185,140,255,.3));
   border:1.5px solid var(--neon);border-radius:13px;padding:13px 16px;
   color:#fff;font-size:16px;font-weight:700;width:100%;margin-top:4px}
