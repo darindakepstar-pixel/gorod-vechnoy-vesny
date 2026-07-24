@@ -19,6 +19,9 @@ button{font-family:inherit;cursor:pointer;border:none}
 #bg{position:absolute;inset:0;transition:background .5s ease;background:#222}
 #bg::after{content:"";position:absolute;inset:0;
   background:radial-gradient(120% 80% at 50% 0%,transparent 40%,rgba(20,8,18,.55) 100%)}
+/* затемнение под текстовым окном: некоторые фоны слишком детальные внизу */
+#bg::before{content:"";position:absolute;left:0;right:0;bottom:0;height:52%;z-index:1;
+  background:linear-gradient(180deg,transparent,rgba(14,7,14,.55) 55%,rgba(14,7,14,.75))}
 
 /* ---- слой персонажей ---- */
 #sprites{position:absolute;inset:0;display:flex;align-items:flex-end;
@@ -102,6 +105,28 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
 .pline b{color:var(--gold);font-weight:700}
 .bar{height:6px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden;margin-top:10px}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--neon))}
+
+/* ---- мини-игры ---- */
+.mg-head{text-align:center;margin-bottom:16px}
+.mg-title{font-size:19px;font-weight:700;color:var(--pink)}
+.mg-hint{font-size:13px;opacity:.7;margin-top:4px}
+.mg-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mg-col{display:flex;flex-direction:column;gap:9px}
+.mg-card{background:rgba(255,255,255,.07);border:1.5px solid var(--line);
+  border-radius:12px;padding:12px 10px;color:#fff;font-size:15px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:background .15s,border-color .15s,opacity .3s,transform .12s}
+.mg-card b{font-size:21px;letter-spacing:2px}
+.mg-card i{font-size:11px;opacity:.6;font-style:normal}
+.mg-card.sel{border-color:var(--neon);background:rgba(63,242,208,.16)}
+.mg-card.miss{border-color:#ff5d7a;background:rgba(255,93,122,.18);
+  animation:shake .35s}
+.mg-card.done{opacity:.28;border-color:transparent;pointer-events:none}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.mg-foot{text-align:center;margin-top:16px;font-size:14px;opacity:.8}
+.mg-start{background:linear-gradient(180deg,rgba(63,242,208,.3),rgba(185,140,255,.3));
+  border:1.5px solid var(--neon);border-radius:13px;padding:13px 16px;
+  color:#fff;font-size:16px;font-weight:700;width:100%;margin-top:4px}
 .gcard{border:1px solid var(--line);border-radius:11px;overflow:hidden;
   background:rgba(255,255,255,.05);cursor:pointer;text-align:left;padding:0;color:#fff}
 .gcard .thumb{width:100%;aspect-ratio:16/9;background:#222 center/cover no-repeat;display:block}
@@ -191,6 +216,14 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
     <div id="namebox" class="hidden"></div>
     <div id="textbox"><span id="text"></span><span id="caret"></span></div>
     <div id="choices"></div>
+  </div>
+</div>
+
+<!-- мини-игра -->
+<div class="overlay" id="mgame" style="padding:16px">
+  <div id="mgbox" style="flex:1"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="abtn ghost" onclick="Game.quitGame()">Закрыть</button>
   </div>
 </div>
 
@@ -295,6 +328,7 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
 
 <script src="config.js"></script>
 <script src="cloud.js"></script>
+<script src="minigames.js"></script>
 <script src="scenes.js"></script>
 <script src="engine.js"></script>
 </body>
