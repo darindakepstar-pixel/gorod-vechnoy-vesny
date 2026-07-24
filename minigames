@@ -127,8 +127,8 @@ MINIGAMES.lyricline = {
       const r = rounds[i];
       box.innerHTML = `
         <div class="mg-head">
-          <div class="mg-title">${MINIGAMES.lyricline.title}</div>
-          <div class="mg-hint">${r.hint || MINIGAMES.lyricline.hint}</div>
+          <div class="mg-title">${cfg.title || MINIGAMES.lyricline.title}</div>
+          <div class="mg-hint">${r.hint || cfg.hint || MINIGAMES.lyricline.hint}</div>
         </div>
         <div class="ly-line">${r.line.replace('___', '<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>')}</div>
         <div class="ly-opts"></div>
