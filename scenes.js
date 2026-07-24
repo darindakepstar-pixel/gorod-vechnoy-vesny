@@ -760,13 +760,263 @@ ch3_89: { bg:'hotel', items:[{img:'phone_lock', pos:'right'}],
 ch3_90: { bg:'hotel', items:[{img:'phone_lock', pos:'right'}],
   text:'Дальше всё пойдёт иначе. Выбирай.',
   choices:[
-    { text:'Танк.',    love:{tank:5}, flags:['ветка_танк'], next:'ROUTE_SPLIT' },
-    { text:'Шэнь Кэ.', love:{shen:5}, flags:['ветка_шэнь'], next:'ROUTE_SPLIT' },
-    { text:'Лэй.',     love:{lei:5},  flags:['ветка_лэй'],  next:'ROUTE_SPLIT' },
-    { text:'Закрыть телефон. Справишься сама.', stats:{rep:2}, flags:['ветка_сама'], next:'ROUTE_SPLIT' },
+    { text:'Лэй.',     love:{lei:5},  flags:['ветка_лэй'],  next:'r_lei_01' },
+    { text:'Танк.',    love:{tank:5}, flags:['ветка_танк'], next:'r_soon' },
+    { text:'Шэнь Кэ.', love:{shen:5}, flags:['ветка_шэнь'], next:'r_soon' },
+    { text:'Закрыть телефон. Справишься сама.', stats:{rep:2}, flags:['ветка_сама'], next:'r_soon' },
   ]},
 
-ROUTE_SPLIT: { bg:'city', ending:true,
-  text:'Здесь заканчивается общая часть. Дальше — четыре разные истории, и они ещё пишутся.', next:null },
+/* ========== РАЗВИЛКА ========== */
+
+r_soon: { bg:'city', ending:true,
+  text:'Эта ветка ещё пишется. Вернись позже — или пройди заново и выбери другого.', next:null },
+
+/* ========== ВЕТКА ЛЭЯ. Глава 4. Четыре утра ========== */
+
+r_lei_01: { bg:'hotel', chapter:'Глава 4. Четыре утра',
+  items:[{img:'phone_lock', pos:'right'}],
+  text:'Ты нажала на вызов раньше, чем успела придумать, что скажешь.', next:'r_lei_02' },
+
+r_lei_02: { bg:'hotel', items:[{img:'phone_lock', pos:'right'}],
+  text:'Гудок. Второй. Пятый. Восьмой.', next:'r_lei_03' },
+
+r_lei_03: { bg:'hotel', items:[{img:'phone_lock', pos:'right'}],
+  text:'Сброс.', next:'r_lei_04' },
+
+r_lei_04: { bg:'hotel',
+  text:'Ты положила телефон экраном вниз и сказала себе, что это был правильный урок и что ты его заслужила.', next:'r_lei_05' },
+
+r_lei_05: { bg:'hotel', items:[{img:'phone_lock', pos:'right'}],
+  text:'Через четыре минуты телефон завибрировал. Один раз.', next:'r_lei_06' },
+
+r_lei_06: { bg:'hotel', who:'ЛЭЙ', items:[{img:'phone_lock', pos:'right'}],
+  text:'Улица Вэньлинь, 7. Вход со двора, железная дверь. Не звони, я не слышу.', next:'r_lei_07' },
+
+r_lei_07: { bg:'hotel',
+  text:'И всё. Ни «привет», ни «что случилось», ни «сейчас полночь, ты в своём уме».', next:'r_lei_08' },
+
+/* ---------- студия ---------- */
+
+r_lei_08: { bg:'studio',
+  card:{ cn:'录音室', en:'Улица Вэньлинь, 7', lines:['00:41','дверь со двора'] },
+  text:'Железная дверь была не заперта. За ней оказался коридор, за коридором — комната, обшитая изнутри так, что звук в ней умирал, не долетев до стены.', next:'r_lei_09' },
+
+r_lei_09: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Он сидел за пультом спиной к двери, в наушниках, и не обернулся. На столе стояли четыре пустых стакана из-под кофе.',
+  items:[{img:'coffee', pos:'left'}], next:'r_lei_10' },
+
+r_lei_10: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Ты стояла в дверях минуты полторы, прежде чем он снял один наушник — не оборачиваясь.', next:'r_lei_11' },
+
+r_lei_11: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'Слайд одиннадцатый. У тебя там про традицию и качество.', next:'r_lei_12' },
+
+r_lei_12: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'Т/И',
+  text:'Ты видел презентацию?', next:'r_lei_13' },
+
+r_lei_13: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'Мне её прислали в четверг. Я посмотрел в четверг.', next:'r_lei_14' },
+
+r_lei_14: { bg:'studio', sprite:{char:'lei', emo:'neutral'},
+  text:'Он развернулся вместе со стулом. Под глазами у него было хуже, чем месяц назад.', next:'r_lei_15' },
+
+r_lei_15: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'ЛЭЙ',
+  text:'Слайд одиннадцатый — враньё. Не твоё, конечно. Просто так пишут все.', next:'r_lei_16' },
+
+r_lei_16: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'Т/И',
+  text:'И как надо?', next:'r_lei_17' },
+
+r_lei_17: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'ЛЭЙ',
+  text:'Ты была на Доунане?', next:'r_lei_18' },
+
+r_lei_18: { bg:'studio', sprite:{char:'lei', emo:'neutral'},
+  text:'Ты кивнула. Он смотрел на тебя так, будто это был экзамен, и от твоего лица зависела оценка.', next:'r_lei_19' },
+
+r_lei_19: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'ЛЭЙ',
+  text:'Тогда ты знаешь. Там в пять утра стоят люди по колено в воде и грузят полтора миллиона роз, чтобы через четыре дня кто-то в Новосибирске поставил их на стол.', next:'r_lei_20' },
+
+r_lei_20: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'ЛЭЙ',
+  text:'Вот это продавай. Не традицию. Расстояние.', next:'r_lei_21' },
+
+r_lei_21: { bg:'studio',
+  text:'Ты открыла ноутбук и села на пол, потому что второго стула не было. Он молча пододвинул тебе розетку ногой.', stats:{rep:1}, next:'r_lei_22' },
+
+r_lei_22: { bg:'studio', sprite:{char:'lei', emo:'neutral'},
+  text:'Вы работали три часа. Он говорил мало и по делу, и каждый раз, когда ты произносила вслух что-то гладкое и пустое, он молчал ровно на секунду дольше обычного — и ты сама слышала, как это звучит.', next:'r_lei_23' },
+
+/* ---------- мини-игра: строчка ---------- */
+
+r_lei_23: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'В половине четвёртого он перестал отвечать. Просто сидел, глядя в экран, и трогал пальцем один и тот же кусок волны туда-сюда.', next:'r_lei_24' },
+
+r_lei_24: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'Не идёт. Четвёртый месяц не идёт.', next:'r_lei_25' },
+
+r_lei_25: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'Т/И',
+  text:'Прочитай вслух.', next:'r_lei_26' },
+
+r_lei_26: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Он посмотрел на тебя так, как смотрят на человека, попросившего показать шрам. И прочитал.', next:'r_lei_27' },
+
+r_lei_27: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'По-русски. Криво, с чудовищным акцентом, подбирая слова, — потому что писал он по-китайски, а читал тебе.',
+  game:{ type:'lyricline', label:'Подсказать слово', skippable:false, love:{lei:3} },
+  next:'r_lei_28' },
+
+r_lei_28: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Он записал последнюю строчку и долго смотрел на неё. Потом отложил карандаш.', next:'r_lei_29' },
+
+r_lei_29: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'Четыре месяца. Четыре месяца я не мог закрыть один куплет.', next:'r_lei_30' },
+
+/* ---------- татуировка ---------- */
+
+r_lei_30: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Он потянулся за стаканом, рукав съехал, и ты снова увидела запястье. Иероглиф и под ним восемь цифр.', next:'r_lei_31' },
+
+r_lei_31: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Ты смотрела ровно на секунду дольше, чем следовало. Он заметил.',
+  choices:[
+    { text:'Отвести взгляд и промолчать.', love:{lei:1}, next:'r_lei_32a' },
+    { text:'«Что там написано?»', love:{lei:2}, flags:['спросила_про_тату'], next:'r_lei_32b' },
+    { text:'«Это дата. Чья?»', love:{lei:3}, stats:{rep:1}, flags:['догадалась'], next:'r_lei_32c' },
+  ]},
+
+r_lei_32a: { bg:'studio', sprite:{char:'lei', emo:'neutral'},
+  text:'Он сам одёрнул рукав. Потом, через минуту, закатал обратно.', next:'r_lei_33' },
+
+r_lei_32b: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'ЛЭЙ',
+  text:'卖. Продал.', next:'r_lei_33' },
+
+r_lei_32c: { bg:'studio', sprite:{char:'lei', emo:'neutral'},
+  text:'Он замер со стаканом на полпути. Поставил обратно.', next:'r_lei_32c2' },
+r_lei_32c2: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'ЛЭЙ',
+  text:'Дата. Да. А иероглиф — 卖. Продал.', next:'r_lei_33' },
+
+r_lei_33: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'Т/И',
+  text:'Что продал?', next:'r_lei_34' },
+
+r_lei_34: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'ЛЭЙ',
+  text:'Четырнадцатое ноября. День, когда я подписал контракт.', next:'r_lei_35' },
+
+r_lei_35: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'Мне было двадцать пять, мне дали денег, каких я в жизни не видел, и сказали: теперь ты пишешь то, что мы согласуем. Я подписал за сорок минут.', next:'r_lei_36' },
+
+r_lei_36: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'Наколол через неделю. Чтобы каждый раз, когда закатываю рукав, помнить, что я сделал и какого числа.', next:'r_lei_37' },
+
+r_lei_37: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Он сказал это ровно, без жалости к себе, как сообщают диагноз, с которым живут давно.', next:'r_lei_38' },
+
+r_lei_38: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'Т/И',
+  text:'А Танк?', next:'r_lei_39' },
+
+r_lei_39: { bg:'studio', sprite:{char:'lei', emo:'cold'},
+  text:'Вот тут он всё-таки дрогнул.', next:'r_lei_40' },
+
+r_lei_40: { bg:'studio', sprite:{char:'lei', emo:'cold'}, who:'ЛЭЙ',
+  text:'Юй сказал не подписывать. Я подписал. Он сказал, что я об этом пожалею. Я сказал ему, что он завидует.', next:'r_lei_41' },
+
+r_lei_41: { bg:'studio', sprite:{char:'lei', emo:'cold'}, who:'ЛЭЙ',
+  text:'Через год он выпустил альбом, который слушают до сих пор, а я выпустил три сингла, которые невозможно вспомнить. И оказалось, что он не завидовал.', next:'r_lei_42' },
+
+r_lei_42: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'Мы четыре года не разговариваем. Не потому, что он не хочет. Потому что я не могу.', flags:['знаешь_про_ссору'], next:'r_lei_43' },
+
+r_lei_43: { bg:'studio',
+  text:'В комнате, где умирает звук, тишина получается особенная. Такая, в которой слышно, как ты сама дышишь.',
+  choices:[
+    { text:'«Он тебя ждёт. Он мне сам сказал.»', love:{lei:3, tank:2}, stats:{rep:1}, flags:['передала_слова'], next:'r_lei_44a' },
+    { text:'«Ты наказываешь себя четыре года. Хватит.»', love:{lei:2}, flags:['надавила'], next:'r_lei_44b' },
+    { text:'Ничего не говорить. Просто сесть рядом.', love:{lei:4}, flags:['молчание'], next:'r_lei_44c' },
+  ]},
+
+r_lei_44a: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Он не ответил. Но что-то в плечах у него опустилось на полсантиметра, и это было больше, чем любые слова.', next:'r_lei_45' },
+
+r_lei_44b: { bg:'studio', sprite:{char:'lei', emo:'cold'}, who:'ЛЭЙ',
+  text:'Ты здесь месяц. — Пауза. — Прости. Ты права, просто ты здесь месяц.', next:'r_lei_45' },
+
+r_lei_44c: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Ты просто села рядом на пол, спиной к пульту, плечом к его колену. Он не отодвинулся.', next:'r_lei_45' },
+
+/* ---------- четыре утра ---------- */
+
+r_lei_45: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  card:{ cn:'凌晨四点', en:'Четыре утра', lines:['звук умирает у стен','кофе кончился'] },
+  text:'В четыре он спросил, зачем ты вообще уехала из дома.', next:'r_lei_46' },
+
+r_lei_46: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'И ты рассказала. Не отредактированную версию для собеседований, а настоящую — про то, от чего ты уехала, а не за чем.', next:'r_lei_47' },
+
+r_lei_47: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Он слушал, не перебивая, и ни разу не сказал ни «понимаю», ни «всё наладится», ни одной из тех фраз, которыми люди затыкают чужую боль, чтобы она не капала на них.', next:'r_lei_48' },
+
+r_lei_48: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'В аэропорту. Ты попросила розетку.', next:'r_lei_49' },
+
+r_lei_49: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'За четыре года ко мне подходили тысячи людей. Фото, автограф, послушай мой трек, дай контакт. Ты первая, кто попросил у меня что-то, чего не было только у меня.', next:'r_lei_50' },
+
+r_lei_50: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'Ты просто хотела розетку. Я тогда весь день об этом думал.', next:'r_lei_51' },
+
+r_lei_51: { bg:'studio',
+  text:'Между вами было полметра пола. Ровно столько же, сколько тогда.', next:'r_lei_52' },
+
+r_lei_52: { bg:'studio',
+  text:'Дальше нужно было либо что-то сказать, либо не говорить ничего и придвинуться.',
+  choices:[
+    { text:'«Я тебя тогда даже не узнала.»', love:{lei:2}, next:'r_lei_53a' },
+    { text:'«Я тоже об этом думала. Весь месяц.»', love:{lei:4}, flags:['призналась'], next:'r_lei_53b' },
+    { text:'Ничего не говорить.', love:{lei:4}, flags:['молча'], next:'r_lei_53c' },
+  ]},
+
+r_lei_53a: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'ЛЭЙ',
+  text:'Знаю. Поэтому и думал.', next:'r_lei_54' },
+
+r_lei_53b: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Он повернул голову. Очень медленно — как поворачиваются, когда боятся спугнуть.', next:'r_lei_54' },
+
+r_lei_53c: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'Ты не сказала ничего. И полметра пола между вами вдруг стали единственным, о чём оба думали.', next:'r_lei_54' },
+
+r_lei_54: { bg:'studio', cg:'studio_close',
+  text:'Он поднял руку и убрал прядь тебе за ухо — так осторожно, будто проверял, не отшатнёшься ли.', next:'r_lei_55' },
+
+r_lei_55: { bg:'studio', cg:'studio_close',
+  text:'Ты не отшатнулась.', next:'r_lei_56' },
+
+r_lei_56: { bg:'studio', cg:'studio_close',
+  text:'Потом было тихо — той особенной тишиной комнаты, где умирает звук, и было слышно только, что ни один из вас больше не пытается быть вежливым.', flags:['поцелуй_лэй'], love:{lei:5}, next:'r_lei_57' },
+
+r_lei_57: { bg:'studio', sprite:{char:'lei', emo:'tired'},
+  text:'В пять сорок он сварил последний кофе на двоих в одном стакане, потому что чистых больше не было.',
+  items:[{img:'coffee', pos:'right'}], next:'r_lei_58' },
+
+r_lei_58: { bg:'studio', sprite:{char:'lei', emo:'tired'}, who:'Т/И',
+  text:'У меня презентация в десять.', next:'r_lei_59' },
+
+r_lei_59: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'ЛЭЙ',
+  text:'Знаю. Я приду.', next:'r_lei_60' },
+
+r_lei_60: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'Т/И',
+  text:'Ты никогда не ходишь на презентации.', next:'r_lei_61' },
+
+r_lei_61: { bg:'studio', sprite:{char:'lei', emo:'neutral'}, who:'ЛЭЙ',
+  text:'Не хожу.', next:'r_lei_62' },
+
+r_lei_62: { bg:'city',
+  card:{ cn:'早上六点', en:'Шесть утра', lines:['+16°C','мокрый асфальт','город вечной весны'] },
+  text:'Ты вышла во двор. Было светло, было тепло, и город, у которого весна круглый год, делал вид, что так всегда и было.', next:'r_lei_63' },
+
+r_lei_63: { bg:'city',
+  text:'Ты успела дойти до угла, когда телефон завибрировал.', items:[{img:'phone_lock', pos:'right'}], next:'r_lei_64' },
+
+r_lei_64: { bg:'city', who:'ЛЭЙ', items:[{img:'phone_lock', pos:'right'}],
+  text:'куртку не возвращай', next:'r_lei_65' },
+
+r_lei_65: { bg:'city', ending:true,
+  text:'Конец четвёртой главы. Пятая — та, где всё ломается.', next:null },
 
 };
