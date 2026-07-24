@@ -110,6 +110,52 @@ function applyStats(obj){
   paintStats();
 }
 
+/* ---------- мини-игры ---------- */
+let gameAfter = null;
+
+function offerGame(cfg, after){
+  const g = (window.MINIGAMES || {})[cfg.type];
+  if(!g){ after(); return; }                 /* игры нет — просто идём дальше */
+  const box = $('choices');
+  const b = document.createElement('button');
+  b.className = 'mg-start';
+  b.textContent = cfg.label || ('Играть: ' + (g.title || cfg.type));
+  b.onclick = ev => { ev.stopPropagation(); runGame(cfg, after); };
+  box.appendChild(b);
+  if(cfg.skippable !== false){
+    const s = document.createElement('button');
+    s.className = 'choice';
+    s.textContent = cfg.skipLabel || 'Не сейчас';
+    s.onclick = ev => { ev.stopPropagation(); box.innerHTML = ''; after(); };
+    box.appendChild(s);
+  }
+}
+
+function runGame(cfg, after){
+  const g = MINIGAMES[cfg.type];
+  gameAfter = after;
+  $('choices').innerHTML = '';
+  $('mgame').classList.add('on');
+  g.mount($('mgbox'), cfg, res => {
+    $('mgame').classList.remove('on');
+    $('mgbox').innerHTML = '';
+    gameAfter = null;
+    const rew = cfg.reward || (g.reward ? g.reward(res) : null);
+    if(rew) applyStats(rew);
+    if(res.success && cfg.flag && !state.flags.includes(cfg.flag)) state.flags.push(cfg.flag);
+    if(cfg.love) applyLove(cfg.love);
+    autosave();
+    after(res);
+  });
+}
+
+function quitGame(){
+  $('mgame').classList.remove('on');
+  $('mgbox').innerHTML = '';
+  const go = gameAfter; gameAfter = null;
+  if(go) go({ success:false, score:0, max:0 });
+}
+
 /* ---------- переходная карточка ---------- */
 function showCard(c, after){
   cardAfter = after;
@@ -235,6 +281,7 @@ async function show(id){
 
   $('choices').innerHTML = '';
   const runText = () => type(s.text, () => {
+    if(s.game){ offerGame(s.game, () => { if(s.next) show(s.next); }); return; }
     if(s.choices) renderChoices(s.choices);
     else if(s.ending){ CL.markEnding(id); renderChoices([{text:'Вернуться на титул', next:'__title'}]); }
   });
@@ -304,6 +351,7 @@ function advance(e){
     return;
   }
   if($('choices').children.length) return;
+  if($('mgame').classList.contains('on')) return;
   const s = SCENES[state.scene];
   if(s && s.next) show(s.next);
 }
@@ -507,5 +555,5 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
 
 return { start, advance, save, load, openMenu, openLog, openGallery, closeAll,
          setSpeed, toggleDebug, toTitle, spriteFallback, skipCard,
-         doLogin, doRegister, doLogout, playLocal, confirmNew, openBoard };
+         doLogin, doRegister, doLogout, playLocal, confirmNew, openBoard, quitGame };
 })();
