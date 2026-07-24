@@ -105,6 +105,94 @@ MINIGAMES.wordmatch = {
 };
 
 /* ------------------------------------------------------------
+   СТРОЧКА: помочь ему дописать текст.
+   Четыре раунда, в каждом нужно выбрать слово, которое держит
+   образ и ритм. Растит симпатию, а выбранные слова запоминаются —
+   в седьмой главе из них соберётся тот самый трек.
+------------------------------------------------------------ */
+MINIGAMES.lyricline = {
+  title: 'Строчка',
+  hint:  'Он застрял. Подскажи слово.',
+
+  mount(box, cfg, done){
+    const rounds = cfg.rounds || this.rounds;
+    let i = 0, score = 0;
+    const picked = [];
+
+    function draw(){
+      if(i >= rounds.length){
+        window.__lyricPicked = picked;
+        return done({ success: score >= rounds.length - 1, score, max: rounds.length, picked });
+      }
+      const r = rounds[i];
+      box.innerHTML = `
+        <div class="mg-head">
+          <div class="mg-title">${MINIGAMES.lyricline.title}</div>
+          <div class="mg-hint">${r.hint || MINIGAMES.lyricline.hint}</div>
+        </div>
+        <div class="ly-line">${r.line.replace('___', '<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>')}</div>
+        <div class="ly-opts"></div>
+        <div class="mg-foot"><span>${i + 1} из ${rounds.length}</span></div>`;
+      const box2 = box.querySelector('.ly-opts');
+      [...r.opts].sort(() => Math.random() - 0.5).forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'choice';
+        b.textContent = o.w;
+        b.onclick = () => pick(b, o, r);
+        box2.appendChild(b);
+      });
+    }
+
+    function pick(btn, o, r){
+      box.querySelectorAll('.ly-opts button').forEach(x => x.disabled = true);
+      btn.classList.add(o.good ? 'ly-good' : 'ly-meh');
+      if(o.good) score++;
+      picked.push(o.w);
+      const note = document.createElement('div');
+      note.className = 'ly-note';
+      note.textContent = o.say;
+      box.appendChild(note);
+      setTimeout(() => { i++; draw(); }, 1700);
+    }
+
+    draw();
+  },
+
+  reward: r => ({ rep: r.success ? 1 : 0 }),
+
+  rounds: [
+    { line:'город держит меня за ___',
+      hint:'Он читает вслух и обрывается на середине.',
+      opts:[
+        { w:'горло',   good:true,  say:'— Горло. Да. Оно душит, а не обнимает. Хорошо.' },
+        { w:'руку',    good:false, say:'— Слишком ласково. Он мне не друг.' },
+        { w:'плечо',   good:false, say:'— Это про поддержку. Не то.' },
+      ]},
+    { line:'я приехал сюда с ___ и без имени',
+      hint:'Эта строчка про него самого.',
+      opts:[
+        { w:'рюкзаком', good:true,  say:'— …откуда ты знаешь? — Танк рассказал. — Ага. Ну да. Пусть будет.' },
+        { w:'деньгами', good:false, say:'— Не было у меня денег.' },
+        { w:'мечтой',   good:false, say:'— Так поют в рекламе банков.' },
+      ]},
+    { line:'здесь весна ___ круглый год',
+      hint:'Про Куньмин. Он ждёт подвоха.',
+      opts:[
+        { w:'врёт',     good:true,  say:'Он замер. Потом медленно записал. — Вот это забирай себе, это твоё.' },
+        { w:'цветёт',   good:false, say:'— Это надпись на открытке.' },
+        { w:'живёт',    good:false, say:'— Слабо. Рифма ради рифмы.' },
+      ]},
+    { line:'а я всё ещё ___',
+      hint:'Последняя. Он не смотрит на тебя.',
+      opts:[
+        { w:'жду',      good:true,  say:'Долгая пауза. — Ладно. Ладно, пусть так.' },
+        { w:'бегу',     good:false, say:'— Слишком бодро для четырёх утра.' },
+        { w:'молчу',    good:false, say:'— Это красиво. Но это неправда.' },
+      ]},
+  ]
+};
+
+/* ------------------------------------------------------------
    Место для следующих игр. Достаточно добавить объект сюда,
    и он станет доступен в сценах через game:{type:'...'}.
 ------------------------------------------------------------ */
