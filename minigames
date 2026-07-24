@@ -1,0 +1,112 @@
+/* ============================================================
+   МИНИ-ИГРЫ.
+   Каждая — это объект с методом mount(box, cfg, done).
+     box  — контейнер, куда рисовать
+     cfg  — настройки из сцены
+     done — вызвать по окончании: done({success, score, max})
+
+   Подключение в сцене:
+     ch1_31: { bg:'taxi', text:'Ты достала телефон.',
+               game:{ type:'wordmatch', label:'Открыть переводчик' },
+               next:'ch1_32' }
+
+   Награда считается сама по доле правильных ответов —
+   см. reward в описании каждой игры ниже.
+   ============================================================ */
+
+const MINIGAMES = {};
+
+/* ------------------------------------------------------------
+   ПЕРЕВОДЧИК: соедини китайское слово с русским.
+   Растит стат «китайский».
+------------------------------------------------------------ */
+MINIGAMES.wordmatch = {
+  title: 'Переводчик',
+  hint:  'Соедини китайское слово с переводом',
+  reward: r => ({ lang: r.success ? 2 : (r.score >= r.max / 2 ? 1 : 0) }),
+
+  pairs: [
+    { cn:'花',     py:'huā',        ru:'цветок' },
+    { cn:'电话',   py:'diànhuà',    ru:'телефон' },
+    { cn:'谢谢',   py:'xièxie',     ru:'спасибо' },
+    { cn:'多少钱', py:'duōshao qián', ru:'сколько стоит' },
+    { cn:'明天',   py:'míngtiān',   ru:'завтра' },
+    { cn:'对不起', py:'duìbuqǐ',    ru:'извини' },
+  ],
+
+  mount(box, cfg, done){
+    const n = cfg.count || 5;
+    const pool = [...this.pairs].sort(() => Math.random() - 0.5).slice(0, n);
+    const left  = [...pool].sort(() => Math.random() - 0.5);
+    const right = [...pool].sort(() => Math.random() - 0.5);
+    let picked = null, solved = 0, mistakes = 0;
+
+    box.innerHTML = `
+      <div class="mg-head">
+        <div class="mg-title">${this.title}</div>
+        <div class="mg-hint">${this.hint}</div>
+      </div>
+      <div class="mg-cols">
+        <div class="mg-col" id="mgL"></div>
+        <div class="mg-col" id="mgR"></div>
+      </div>
+      <div class="mg-foot"><span id="mgScore">0 из ${n}</span></div>`;
+
+    const draw = (id, items, side) => {
+      const c = box.querySelector('#' + id);
+      c.innerHTML = '';
+      items.forEach(p => {
+        const b = document.createElement('button');
+        b.className = 'mg-card';
+        b.dataset.cn = p.cn;
+        b.innerHTML = side === 'L'
+          ? `<b>${p.cn}</b><i>${p.py}</i>`
+          : `<span>${p.ru}</span>`;
+        b.onclick = () => tap(b, p, side);
+        c.appendChild(b);
+      });
+    };
+
+    function tap(btn, pair, side){
+      if(btn.classList.contains('done')) return;
+      if(!picked){
+        box.querySelectorAll('.mg-card.sel').forEach(x => x.classList.remove('sel'));
+        btn.classList.add('sel');
+        picked = { btn, pair, side };
+        return;
+      }
+      if(picked.side === side){            // передумала, выбрала другое с той же стороны
+        picked.btn.classList.remove('sel');
+        btn.classList.add('sel');
+        picked = { btn, pair, side };
+        return;
+      }
+      if(picked.pair.cn === pair.cn){      // попала
+        picked.btn.classList.remove('sel');
+        picked.btn.classList.add('done');
+        btn.classList.add('done');
+        solved++;
+        box.querySelector('#mgScore').textContent = `${solved} из ${n}`;
+        picked = null;
+        if(solved === n) setTimeout(() => done({ success: mistakes === 0, score: solved, max: n }), 450);
+      } else {                             // мимо
+        mistakes++;
+        btn.classList.add('miss');
+        picked.btn.classList.add('miss');
+        const a = picked.btn, b = btn;
+        setTimeout(() => { a.classList.remove('miss','sel'); b.classList.remove('miss'); }, 420);
+        picked = null;
+      }
+    }
+
+    draw('mgL', left, 'L');
+    draw('mgR', right, 'R');
+  }
+};
+
+/* ------------------------------------------------------------
+   Место для следующих игр. Достаточно добавить объект сюда,
+   и он станет доступен в сценах через game:{type:'...'}.
+------------------------------------------------------------ */
+
+window.MINIGAMES = MINIGAMES;
