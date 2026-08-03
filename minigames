@@ -197,4 +197,82 @@ MINIGAMES.lyricline = {
    и он станет доступен в сценах через game:{type:'...'}.
 ------------------------------------------------------------ */
 
+/* ------------------------------------------------------------
+   СВЕДЕНИЕ ТРЕКА: расставить дорожки по местам.
+   Кульминация ветки Лэя — вы вдвоём сводите тот самый трек.
+   Игрок распределяет элементы по трём слотам; правильная
+   расстановка = чистый микс. Растит симпатию и репутацию.
+------------------------------------------------------------ */
+MINIGAMES.mixtrack = {
+  title: 'Сведение',
+  hint:  'Разложи дорожки. Что где должно звучать.',
+
+  mount(box, cfg, done){
+    const slots = cfg.slots;
+    const chips = [];
+    slots.forEach(s => s.correct.forEach(c => chips.push({ label:c, slot:s.id })));
+    chips.sort(() => Math.random() - 0.5);
+    const placed = {};              // label -> slotId, куда положил игрок
+    slots.forEach(s => placed[s.id] = []);
+    let pool = chips.map(c => c.label);
+
+    function render(){
+      box.innerHTML = `
+        <div class="mg-head">
+          <div class="mg-title">${cfg.title || MINIGAMES.mixtrack.title}</div>
+          <div class="mg-hint">${cfg.hint || MINIGAMES.mixtrack.hint}</div>
+        </div>
+        <div class="mx-pool" id="mxPool"></div>
+        <div class="mx-slots" id="mxSlots"></div>
+        <button class="mg-start" id="mxDone">Свести</button>`;
+      const poolBox = box.querySelector('#mxPool');
+      pool.forEach(label => {
+        const b = document.createElement('button');
+        b.className = 'mx-chip'; b.textContent = label;
+        b.onclick = () => { selected = label; highlight(); };
+        poolBox.appendChild(b);
+      });
+      const slotBox = box.querySelector('#mxSlots');
+      slots.forEach(s => {
+        const col = document.createElement('div');
+        col.className = 'mx-slot';
+        col.innerHTML = `<div class="mx-slot-name">${s.name}</div>`;
+        placed[s.id].forEach(label => {
+          const c = document.createElement('div');
+          c.className = 'mx-chip placed'; c.textContent = label;
+          c.onclick = () => { placed[s.id] = placed[s.id].filter(x=>x!==label); pool.push(label); render(); };
+          col.appendChild(c);
+        });
+        col.onclick = e => {
+          if(e.target !== col && !e.target.classList.contains('mx-slot-name')) return;
+          if(!selected) return;
+          pool = pool.filter(x => x !== selected);
+          placed[s.id].push(selected);
+          selected = null; render();
+        };
+        slotBox.appendChild(col);
+      });
+      box.querySelector('#mxDone').onclick = finish;
+      highlight();
+    }
+    let selected = null;
+    function highlight(){
+      box.querySelectorAll('.mx-pool .mx-chip').forEach(c =>
+        c.classList.toggle('sel', c.textContent === selected));
+    }
+    function finish(){
+      let right = 0, total = chips.length;
+      slots.forEach(s => {
+        placed[s.id].forEach(label => {
+          if(s.correct.includes(label)) right++;
+        });
+      });
+      done({ success: right === total, score: right, max: total });
+    }
+    render();
+  },
+
+  reward: r => ({ rep: r.success ? 2 : (r.score >= r.max - 1 ? 1 : 0) }),
+};
+
 window.MINIGAMES = MINIGAMES;
