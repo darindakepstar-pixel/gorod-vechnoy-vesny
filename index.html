@@ -131,6 +131,16 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
 .ly-opts button:disabled{opacity:.4}
 .ly-good{border-color:var(--neon)!important;background:rgba(63,242,208,.2)!important;opacity:1!important}
 .ly-meh{border-color:#ffd166!important;background:rgba(255,209,102,.15)!important;opacity:1!important}
+.mx-pool{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+  min-height:44px;margin-bottom:18px;padding:10px;border:1px dashed var(--line);border-radius:12px}
+.mx-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.mx-slot{min-height:90px;border:1.5px solid var(--line);border-radius:12px;padding:8px;
+  display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.04)}
+.mx-slot-name{font-size:12px;opacity:.7;text-align:center;pointer-events:none}
+.mx-chip{background:rgba(255,255,255,.09);border:1.5px solid var(--line);border-radius:10px;
+  padding:9px 12px;color:#fff;font-size:14px;transition:all .12s}
+.mx-chip.sel{border-color:var(--neon);background:rgba(63,242,208,.2)}
+.mx-chip.placed{background:rgba(185,140,255,.2);font-size:13px;padding:7px 10px}
 .ly-note{margin-top:16px;padding:12px 14px;border-left:2px solid var(--pink);
   font-size:14px;line-height:1.6;opacity:.92;animation:pop .3s ease}
 .mg-start{background:linear-gradient(180deg,rgba(63,242,208,.3),rgba(185,140,255,.3));
