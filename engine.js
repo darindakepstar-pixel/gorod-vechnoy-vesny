@@ -33,6 +33,16 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 /* ---------- облако ----------
    Если cloud.js не подключён, подставляем заглушку: игра должна
    работать локально, а не падать целиком. */
+/* ---------- активная история ---------- */
+let STORY = null, SCENES = {}, CHARS = {}, BACKGROUNDS = {};
+function loadStory(sid){
+  const s = (window.STORIES || {})[sid];
+  if(!s) return false;
+  STORY = s; SCENES = s.scenes; CHARS = s.chars; BACKGROUNDS = s.backgrounds;
+  document.documentElement.style.setProperty('--pink', s.accent || '#ff7ab8');
+  return true;
+}
+
 const CLOUD_MISSING = (typeof Cloud === 'undefined');
 const CL = CLOUD_MISSING ? {
   init:()=>false, on:()=>false, user:()=>null,
@@ -81,12 +91,14 @@ const STAT_NAMES = { lang:'китайский', money:'деньги', rep:'ре�
 
 /* ---------- состояние ---------- */
 function fresh(){
-  return { scene:'ch1_01', love:{lei:0,tank:0,shen:0},
+  return { story: STORY ? STORY.id : 'kunming',
+           scene: STORY ? STORY.start : 'ch1_01',
+           love:{lei:0,tank:0,shen:0},
            stats:{lang:0, money:0, rep:0}, flags:[], chapter:'',
            log:[], seen:[], playedMs:0 };
 }
 
-const TOTAL_SCENES = Object.keys(SCENES).length;
+function totalScenes(){ return Object.keys(SCENES).length; }
 
 /* ---------- статы и всплывающие уведомления ---------- */
 function paintStats(){
@@ -413,6 +425,7 @@ async function load(slot){
   if(!raw){ const l = localStorage.getItem(LS+slot); raw = l ? JSON.parse(l) : null; }
   if(!raw){ alert('Пустой слот.'); return; }
   state = raw;
+  if(state.story && (!STORY || STORY.id !== state.story)) loadStory(state.story);
   if(!state.stats) state.stats = {lang:0, money:0, rep:0};
   if(!state.seen) state.seen = [];
   paintStats();
@@ -459,14 +472,14 @@ async function paintProfile(){
   if(!st){ c.innerHTML = '<div style="opacity:.6;font-size:13px">Не удалось получить данные.</div>'; return; }
   const s = st.state || {};
   const seen = (s.seen || []).length;
-  const pct = Math.round(seen / TOTAL_SCENES * 100);
+  const pct = Math.round(seen / Math.max(totalScenes(),1) * 100);
   const mins = Math.round((s.playedMs || 0) / 60000);
   const when = st.updated ? new Date(st.updated).toLocaleString('ru-RU',
       {day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'}) : '—';
   c.innerHTML = `
     <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:10px">${st.nickname || 'Ты'}</div>
     <div class="pline"><span>Остановилась на</span><b>${s.chapter || 'самом начале'}</b></div>
-    <div class="pline"><span>Прочитано сцен</span><b>${seen} из ${TOTAL_SCENES}</b></div>
+    <div class="pline"><span>Прочитано сцен</span><b>${seen} из ${totalScenes()}</b></div>
     <div class="pline"><span>Время в игре</span><b>${mins} мин</b></div>
     <div class="pline"><span>Найдено концовок</span><b>${st.endings}</b></div>
     <div class="pline"><span>Последний раз</span><b style="font-weight:400;color:#fff;opacity:.8">${when}</b></div>
@@ -508,6 +521,35 @@ async function openBoard(){
 }
 
 function toTitle(){ closeAll(); $('title').style.display='flex'; showTitleMode(); }
+
+/* ---------- выбор истории ---------- */
+function openStories(){
+  const grid = $('storygrid');
+  const stories = Object.values(window.STORIES || {});
+  grid.innerHTML = stories.map(s => `
+    <button class="story-card ${s.soon ? 'soon' : ''}" onclick="Game.pickStory('${s.id}')">
+      <span class="story-cover" style="${s.cover
+        ? `background-image:url(${(STORY&&STORY.id===s.id?ART:'art/')}${s.cover})`
+        : `background:linear-gradient(160deg,${s.accent},#1a1420)`}"></span>
+      <span class="story-meta">
+        <b>${s.title}</b>
+        <i>${s.subtitle || ''}</i>
+        ${s.soon ? '<span class="story-soon">в разработке</span>' : ''}
+      </span>
+    </button>`).join('');
+  $('stories').classList.add('on');
+}
+
+function pickStory(sid){
+  const s = (window.STORIES||{})[sid];
+  if(!s) return;
+  if(s.soon){ alert('Эта история ещё пишется. Скоро!'); return; }
+  loadStory(sid);
+  closeAll();
+  $('storytitle').textContent = s.title;
+  $('title').style.display = 'flex';
+  showTitleMode();
+}
 function openMenu(){ $('menu').classList.add('on'); }
 function openLog(){
   $('logbody').innerHTML = state.log.slice(-120).map(l =>
@@ -563,6 +605,8 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
   tbg.onload = () => { $('title').style.backgroundImage = `url(${ART}bg_title.jpg)`; };
   tbg.src = ART + 'bg_title.jpg';
 
+  loadStory('kunming');   /* история по умолчанию */
+
   /* заранее греем первые сцены, чтобы старт был мгновенным */
   ['ch1_01','ch1_02','ch1_10','ch1_23'].forEach(id => {
     const s = SCENES[id]; if(s) sceneAssets(s).forEach(ensure);
@@ -585,5 +629,6 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
 
 return { start, advance, save, load, openMenu, openLog, openGallery, closeAll,
          setSpeed, toggleDebug, toTitle, spriteFallback, skipCard,
-         doLogin, doRegister, doLogout, playLocal, confirmNew, openBoard, quitGame };
+         doLogin, doRegister, doLogout, playLocal, confirmNew, openBoard, quitGame,
+         openStories, pickStory };
 })();
