@@ -1,5 +1,11 @@
 const fs=require('fs');
-const src=fs.readFileSync('scenes.js','utf8');const {SCENES,CHARS,BACKGROUNDS}=new Function(src+';return {SCENES,CHARS,BACKGROUNDS};')();
+const files=['story_kunming.js','story_book.js'];
+global.window={};
+for(const f of files){ const src=fs.readFileSync(f,'utf8'); new Function('window',src)(global.window); }
+const story=global.window.STORIES[process.argv[2]||'kunming'];
+const {scenes:SCENES,chars:CHARS,backgrounds:BACKGROUNDS}=story;
+const START=story.start;
+console.log('Проверяю историю:',story.title);
 let bad=0, ids=Object.keys(SCENES), reach=new Set(['ch1_01']);
 for(const [id,s] of Object.entries(SCENES)){
   const targets=[];
@@ -11,6 +17,7 @@ for(const [id,s] of Object.entries(SCENES)){
   if(s.bg && !BACKGROUNDS[s.bg]){ console.log('❌ нет фона',s.bg,'в',id); bad++; }
   if(s.sprite && !CHARS[s.sprite.char]){ console.log('❌ нет персонажа',s.sprite.char,'в',id); bad++; }
 }
+reach.add(START);
 const unreach=ids.filter(i=>!reach.has(i));
 if(unreach.length) console.log('⚠️  недостижимые:',unreach.join(', '));
 console.log(`\nсцен: ${ids.length} | развилок: ${ids.filter(i=>SCENES[i].choices).length} | ошибок: ${bad}`);
