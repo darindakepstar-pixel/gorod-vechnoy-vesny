@@ -110,6 +110,18 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
 .pline b{color:var(--gold);font-weight:700}
 .bar{height:6px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden;margin-top:10px}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--neon))}
+.story-card{display:flex;gap:14px;align-items:stretch;text-align:left;padding:0;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:16px;
+  overflow:hidden;cursor:pointer;color:#fff;transition:border-color .15s,transform .12s}
+.story-card:active{transform:scale(.99)}
+@media(hover:hover){.story-card:hover{border-color:var(--pink)}}
+.story-card.soon{opacity:.6}
+.story-cover{width:110px;flex:none;background-size:cover;background-position:center;
+  background-color:#221a28}
+.story-meta{padding:14px 14px 14px 4px;display:flex;flex-direction:column;gap:4px;justify-content:center}
+.story-meta b{font-size:17px}
+.story-meta i{font-size:12px;opacity:.65;font-style:normal;line-height:1.4}
+.story-soon{margin-top:4px;font-size:11px;color:var(--gold);letter-spacing:.5px}
 
 /* ---- мини-игры ---- */
 .mg-head{text-align:center;margin-bottom:16px}
@@ -264,7 +276,9 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
 <!-- титул -->
 <div id="title">
   <p>визуальная новелла</p>
-  <h1>Город<br>вечной весны</h1>
+  <h1 id="storytitle">Город<br>вечной весны</h1>
+  <button class="abtn ghost" style="opacity:.8;font-weight:400;font-size:13px"
+          onclick="Game.openStories()">← выбрать другую историю</button>
 
   <!-- вход, когда облако подключено -->
   <div id="authbox" style="width:min(340px,90vw);display:none;flex-direction:column;gap:9px;margin-top:8px">
@@ -303,6 +317,15 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
 <div class="overlay" id="board">
   <h2>Кто как далеко зашёл</h2>
   <div id="boardbody"></div>
+  <div class="row" style="margin-top:18px">
+    <button class="abtn" onclick="Game.closeAll()">Назад</button>
+  </div>
+</div>
+
+<!-- выбор истории -->
+<div class="overlay" id="stories">
+  <h2>Выбери историю</h2>
+  <div id="storygrid" style="display:flex;flex-direction:column;gap:12px"></div>
   <div class="row" style="margin-top:18px">
     <button class="abtn" onclick="Game.closeAll()">Назад</button>
   </div>
@@ -353,7 +376,9 @@ input[type=text],input[type=range]{background:rgba(255,255,255,.1);border:1px so
 <script src="config.js"></script>
 <script src="cloud.js"></script>
 <script src="minigames.js"></script>
-<script src="scenes.js"></script>
+<!-- истории: каждая регистрирует себя в STORIES -->
+<script src="story_kunming.js"></script>
+<script src="story_book.js"></script>
 <script src="engine.js"></script>
 </body>
 </html>
