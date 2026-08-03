@@ -77,6 +77,11 @@ button{font-family:inherit;cursor:pointer;border:none}
   padding:13px 16px;color:#fff;text-align:left;font-size:clamp(14px,3.9vw,17px);
   transition:transform .12s,background .12s}
 .choice:active{transform:scale(.985)}
+.choice.locked{opacity:.5;cursor:not-allowed;border-style:dashed;
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.choice.locked:active{transform:none}
+.lock-ic{margin-right:6px}
+.lock-req{font-size:11px;color:var(--gold);opacity:.9;letter-spacing:.3px}
 @media(hover:hover){.choice:hover{background:linear-gradient(180deg,rgba(255,122,184,.45),rgba(185,140,255,.45))}}
 
 /* ---- верхняя панель ---- */
