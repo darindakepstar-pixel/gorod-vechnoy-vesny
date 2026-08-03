@@ -4,6 +4,7 @@ let bad=0, ids=Object.keys(SCENES), reach=new Set(['ch1_01']);
 for(const [id,s] of Object.entries(SCENES)){
   const targets=[];
   if(s.next) targets.push(s.next);
+  if(s.route) s.route.forEach(r=>r.next&&targets.push(r.next));
   if(s.choices) s.choices.forEach(c=>targets.push(c.next));
   for(const t of targets){ if(!SCENES[t]){ console.log('❌ битая ссылка',id,'→',t); bad++; } else reach.add(t); }
   if(!s.next && !s.choices && !s.ending){ console.log('⚠️  тупик без концовки:',id); bad++; }
