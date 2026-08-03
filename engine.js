@@ -243,8 +243,9 @@ function paintDebug(){
   if(!debugOn) return;
   $('debug').innerHTML =
     `<b>симпатия</b><br>Лэй: ${state.love.lei}<br>Танк: ${state.love.tank}<br>Шэнь: ${state.love.shen}
+     <br><b>статы</b><br>кит: ${state.stats.lang} · деньги: ${state.stats.money} · реп: ${state.stats.rep}
      <br><b>сцена</b><br>${state.scene}
-     <br><b>флаги</b><br>${state.flags.length ? state.flags.join('<br>') : '—'}`;
+     <br><b>флаги</b><br>${state.flags.length ? state.flags.slice(-6).join('<br>') : '—'}`;
 }
 
 /* ---------- показ сцены ---------- */
@@ -279,6 +280,14 @@ async function show(id){
 
   if(s.stats) applyStats(s.stats);
 
+  /* route: [{require:{...}, next:'...'}, ...] — первая подходящая ветка.
+     Позволяет сцене без выбора уйти по накопленным статам. */
+  if(s.route){
+    for(const r of s.route){
+      if(meetsReq(r.require)){ if(r.next) return show(r.next); break; }
+    }
+  }
+
   $('choices').innerHTML = '';
   const runText = () => type(s.text, () => {
     if(s.game){ offerGame(s.game, () => { if(s.next) show(s.next); }); return; }
@@ -301,22 +310,43 @@ function applyLove(obj){
   for(const k in obj) if(k in state.love) state.love[k] += obj[k];
 }
 
+/* проверка требования вида require:{lang:3} или require:{rep:5,lang:2} */
+function meetsReq(req){
+  if(!req) return true;
+  for(const k in req){
+    if(k in state.stats){ if(state.stats[k] < req[k]) return false; }
+    else if(k in state.love){ if(state.love[k] < req[k]) return false; }
+  }
+  return true;
+}
+function reqLabel(req){
+  const names = {...STAT_NAMES, lei:'близость с Лэем', tank:'близость с Танком', shen:'близость с Шэнем'};
+  return Object.keys(req).map(k => `${names[k]||k} ${req[k]}+`).join(', ');
+}
+
 function renderChoices(list){
   const box = $('choices');
   box.innerHTML = '';
   list.forEach(ch => {
+    const ok = meetsReq(ch.require);
     const b = document.createElement('button');
-    b.className = 'choice';
-    b.textContent = ch.text;
-    b.onclick = e => {
-      e.stopPropagation();
-      if(ch.love) applyLove(ch.love);
-      if(ch.stats) applyStats(ch.stats);
-      if(ch.flags) ch.flags.forEach(f => { if(!state.flags.includes(f)) state.flags.push(f); });
-      if(ch.next === '__title') return toTitle();
-      box.innerHTML = '';
-      show(ch.next);
-    };
+    b.className = 'choice' + (ok ? '' : ' locked');
+    if(ok){
+      b.textContent = ch.text;
+      b.onclick = e => {
+        e.stopPropagation();
+        if(ch.love) applyLove(ch.love);
+        if(ch.stats) applyStats(ch.stats);
+        if(ch.flags) ch.flags.forEach(f => { if(!state.flags.includes(f)) state.flags.push(f); });
+        if(ch.next === '__title') return toTitle();
+        box.innerHTML = '';
+        show(ch.next);
+      };
+    } else {
+      b.innerHTML = `<span class="lock-ic">🔒</span>${ch.text}
+        <span class="lock-req">нужно: ${reqLabel(ch.require)}</span>`;
+      b.disabled = true;
+    }
     box.appendChild(b);
   });
 }
