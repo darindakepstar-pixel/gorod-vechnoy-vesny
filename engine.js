@@ -58,8 +58,8 @@ function sceneAssets(s){
   const a = [];
   if(s.bg) a.push(ART + 'bg_' + s.bg + '.jpg');
   if(s.cg) a.push(ART + 'cg_' + s.cg + '.jpg');
-  if(s.sprite) a.push(ART + s.sprite.char + '_' + s.sprite.emo + '.png',
-                      ART + s.sprite.char + '_neutral.png');
+  if(s.sprite) a.push(ART + spriteFile(s.sprite.char) + '_' + s.sprite.emo + '.png',
+                      ART + spriteFile(s.sprite.char) + '_neutral.png');
   if(s.items) s.items.forEach(i => a.push(ART + 'item_' + i.img + '.png'));
   return a;
 }
@@ -190,14 +190,17 @@ function skipCard(){
   setTimeout(() => { el.classList.remove('on'); go(); }, 500);
 }
 
+/* имя файла спрайта: из CHARS[char].file или сам char */
+function spriteFile(char){ const c=CHARS[char]; return (c && c.file) ? c.file : char; }
+
 /* ---------- отрисовка ---------- */
 async function paintBG(key){
   const b = BACKGROUNDS[key];
   const el = $('bg');
   if(!b){ el.style.background = '#222'; return; }
-  const url = ART + 'bg_' + key + '.jpg';
+  const url = ART + (b.img || ('bg_' + key + '.jpg'));
   if(await has(url)) el.style.background = `url(${url}) center/cover no-repeat`;
-  else el.style.background = b.css;   /* картинки нет — заливка из scenes.js */
+  else el.style.background = b.css || '#222';   /* картинки нет — заливка */
 }
 
 function paintItems(list){
@@ -230,7 +233,7 @@ function paintSprite(sp){
   box.dataset.cur = sp.char + sp.emo;
 
   /* Ищем art/имя_эмоция.png. Если файла нет — показываем заглушку. */
-  box.innerHTML = `<img class="sprite-img" src="${ART}${sp.char}_${sp.emo}.png"
+  box.innerHTML = `<img class="sprite-img" src="${ART}${spriteFile(sp.char)}_${sp.emo}.png"
       alt="${c.name}" onerror="Game.spriteFallback(this,'${sp.char}','${sp.emo}')">`;
 }
 
@@ -240,7 +243,7 @@ function spriteFallback(img, char, emo){
   if(emo !== 'neutral'){
     img.dataset.want = want;
     img.setAttribute('onerror', `Game.spriteFallback(this,'${char}','neutral')`);
-    img.src = ART + char + '_neutral.png';
+    img.src = ART + spriteFile(char) + '_neutral.png';
     return;
   }
   const c = CHARS[char];
