@@ -6,25 +6,39 @@
 (function(){
 
 const CHARS = {
-  shen:  { name: 'Шэнь Лу',  color: '#3a4a6b' },
+  mira:  { name: 'Мира',     color: '#c98aa8', file:'mira' },
+  shen:  { name: 'Шэнь Лу',  color: '#3a4a6b', file:'shenlu' },
   zhou:  { name: 'Чжоу Линь', color: '#4a7d6b' },
   lisa:  { name: 'Лиса',     color: '#d95b8a' },
   lei:   { name: 'Лэй',      color: '#7d6b4a' },
   hana:  { name: 'Хана',     color: '#6b6b8a' },
   linda: { name: 'Линда',    color: '#c2894a' },
   li:    { name: 'Ли',       color: '#4a8a5b' },
+  marina:{ name: 'Марина Павловна', color:'#8a7d6b', file:'marina' },
+  sima:  { name: 'Сима',     color:'#9a9a8a', file:'cat_sima' },
 };
 
 const BACKGROUNDS = {
-  mos_room:  { name: 'Комната в Москве',    css:'linear-gradient(180deg,#3a3244,#241f2e)' },
-  mos_street:{ name: 'Улица, лето',         css:'linear-gradient(180deg,#c4a86b,#8a7d5b)' },
+  mos_room:  { name: 'Комната в Москве',    img:'book_room.jpg' },
+  mos_curb:  { name: 'Бордюр у дамбы',      img:'bg_mos_curb.jpg' },
+  mos_bath:  { name: 'Ванная',              img:'bg_mos_bath.jpg' },
+  mos_easel: { name: 'У мольберта',         img:'bg_mos_easel.jpg' },
+  lisa_home: { name: 'Гостиная Лисы',       img:'bg_lisa_home.jpg' },
+  mos_kitchen:{ name:'Кухня, вечер',        img:'bg_mos_kitchen.jpg' },
+  stage:     { name: 'Сцена',               img:'bg_stage.jpg' },
+  mos_street:{ name: 'Улица, закат',        img:'bg_mos_street.jpg' },
+  car:       { name: 'Машина, ночь',        img:'bg_book_car.jpg' },
   mos_shop:  { name: 'Atelier Vintage',     css:'linear-gradient(180deg,#4a4048,#2e2830)' },
-  airport:   { name: 'Аэропорт, ночь',      css:'linear-gradient(180deg,#1c2233,#2e2840)' },
+  airport:   { name: 'Аэропорт, ночь',      img:'bg_airport.jpg' },
   plane:     { name: 'Ночной рейс',         css:'linear-gradient(180deg,#14182a,#20263e)' },
-  bj_office: { name: 'Yue Sound, офис',     css:'linear-gradient(180deg,#3a4152,#20242e)' },
+  bj_office: { name: 'Yue Sound, лобби',    img:'bg_bj_office.jpg' },
+  bj_meeting:{ name: 'Переговорка',         img:'bg_bj_meeting.jpg' },
+  bj_sim:    { name: 'Аэропорт, SIM',       img:'bg_bj_sim.jpg' },
+  bj_hall2:  { name: 'Студийный коридор',   img:'bg_studio_hall.jpg' },
   bj_dorm:   { name: 'Общежитие',           css:'linear-gradient(180deg,#3e3a44,#26232c)' },
+  bj_dressing:{ name:'Гримёрка',            img:'bg_bj_dressing.jpg' },
   bj_hall:   { name: 'Зал, реалити-шоу',    css:'linear-gradient(180deg,#4a4458,#2a2636)' },
-  bj_studio: { name: 'Студия звукозаписи',  css:'linear-gradient(180deg,#2e2a26,#18150f)' },
+  bj_studio: { name: 'Студия звукозаписи',  img:'bg_bj_studio.jpg' },
 };
 
 const SCENES = {
@@ -38,10 +52,10 @@ pro_01: { bg:'bj_studio', chapter:'Пролог',
 pro_02: { bg:'bj_studio',
   text:'Я молчу. Только слушаю, как он тяжело дышит, будто каждое слово вырывает что-то изнутри.', next:'pro_03' },
 
-pro_03: { bg:'bj_studio', who:'Шэнь Лу',
+pro_03: { bg:'bj_studio', sprite:{char:'shen', emo:'cold'}, who:'Шэнь Лу',
   text:'А знаешь, чем пахнет настоящий успех? Дорогим парфюмом — чтобы перебить запах пота и страха. На вкус он как виски, который приходится пить с теми, от кого тебя тошнит.', next:'pro_04' },
 
-pro_04: { bg:'bj_studio', who:'Шэнь Лу',
+pro_04: { bg:'bj_studio', sprite:{char:'shen', emo:'cold'}, who:'Шэнь Лу',
   text:'Я был тем, кем они хотели. Делал что нужно. И каждый раз, когда выходил на сцену, чувствовал себя мёртвым.', next:'pro_05' },
 
 pro_05: { bg:'bj_studio',
@@ -50,7 +64,7 @@ pro_05: { bg:'bj_studio',
 pro_06: { bg:'bj_studio',
   text:'Я понимаю, что спасать его бесполезно. Но почему-то всё равно тянусь к нему — будто к огню, который обязательно обожжёт.', next:'pro_07' },
 
-pro_07: { bg:'bj_studio',
+pro_07: { bg:'bj_studio', sprite:{char:'shen', emo:'neutral'},
   text:'— Тогда я хотя бы побуду рядом, — шепчу я. Он закрывает глаза. И впервые за всё это время просто позволяет себе быть живым.', next:'pro_08' },
 
 pro_08: { bg:'mos_room',
@@ -58,26 +72,26 @@ pro_08: { bg:'mos_room',
 
 /* ---------- Глава 1. Москва ---------- */
 
-m1_01: { bg:'mos_street', chapter:'Глава 1. Москва',
+m1_01: { bg:'mos_curb', chapter:'Глава 1. Москва',
   card:{ cn:'莫斯科', en:'Москва', lines:['+29°C','июль','американо остыл'] },
   text:'Сигаретный дым тягуче расползается по душному летнему воздуху. Я сижу на бордюре напротив дамбы, слушаю музыку в наушниках и смотрю, как город расплывается в жарком мареве.', next:'m1_02' },
 
-m1_02: { bg:'mos_street',
+m1_02: { bg:'mos_curb',
   text:'Пальцы липнут к стаканчику американо — он давно не холодный. Я делаю затяжку и шепчу почти беззвучно:', next:'m1_03' },
 
-m1_03: { bg:'mos_street', who:'Мира',
+m1_03: { bg:'mos_curb', who:'Мира',
   text:'— Как же всё заебало.', next:'m1_04' },
 
-m1_04: { bg:'mos_street',
+m1_04: { bg:'mos_curb',
   text:'Голос тонет в шуме машин. Иногда мне кажется, что усталость живёт во мне давно — ещё с детства. Просто раньше я не замечала, как она тихо обвивала меня изнутри.', next:'m1_05' },
 
-m1_05: { bg:'mos_room',
+m1_05: { bg:'mos_bath',
   text:'Дома душно. На зеркале в ванной — следы пальцев, а в отражении худое бледное лицо с тёмными кругами под серо-зелёными глазами. Светло-розовые волосы вымылись до грязно-персикового и прилипли к шее.', next:'m1_06' },
 
-m1_06: { bg:'mos_room', who:'Мира',
+m1_06: { bg:'mos_bath', sprite:{char:'mira', emo:'neutral'}, who:'Мира',
   text:'— Так, я всё равно красивая, — говорю, глядя себе в глаза. Голос звучит устало, но я пытаюсь улыбнуться. Как будто от этого что-то изменится.', next:'m1_07' },
 
-m1_07: { bg:'mos_room',
+m1_07: { bg:'mos_bath',
   text:'Я стараюсь не ненавидеть себя. Не злиться на тело. Не сравнивать. Иногда выходит, чаще — нет.', next:'m1_08' },
 
 m1_08: { bg:'mos_room',
@@ -112,7 +126,7 @@ m1_15: { bg:'mos_room',
 m1_16a: { bg:'mos_room',
   text:'Я думаю, что они перепутали. Что кто-то вроде меня туда не проходит. Но даже если так — я не собираюсь отказываться.', next:'m1_17' },
 
-m1_16b: { bg:'mos_room',
+m1_16b: { bg:'mos_room', sprite:{char:'mira', emo:'neutral'},
   text:'Впервые за долгое время внутри шевелится что-то тёплое. Не радость. Не уверенность. Но возможность. И этого пока достаточно.', next:'m1_17' },
 
 m1_16c: { bg:'mos_room',
@@ -124,19 +138,19 @@ m1_17: { bg:'mos_room',
 m1_18: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'}, who:'Лиса',
   text:'— Мира-а-а! Ты дома, да? Знала, что ты тут, как обычно, тухнешь в одиночестве за мольбертом.', next:'m1_19' },
 
-m1_19: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'},
+m1_19: { bg:'mos_room',
   text:'Лиса вваливается с пакетом печенья и банкой варенья, сразу лезет в холодильник. Её энергия бьёт точно в сердце: смешно, раздражающе и вместе с тем вдохновляюще.', next:'m1_20' },
 
-m1_20: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'}, who:'Мира',
+m1_20: { bg:'mos_room', who:'Мира',
   text:'— Лиса… я получила письмо. От музыкальной компании. Я прошла отбор.', next:'m1_21' },
 
 m1_21: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'}, who:'Лиса',
   text:'— Мира, это кру-у-уто! Китай! Музыка! Ты наконец сможешь показать, что можешь!', next:'m1_22' },
 
-m1_22: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'}, who:'Мира',
+m1_22: { bg:'mos_room', who:'Мира',
   text:'— Я знаю. Но я боюсь.', next:'m1_23' },
 
-m1_23: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'},
+m1_23: { bg:'mos_room',
   text:'Лиса садится рядом, берёт мою руку и сжимает.', next:'m1_24' },
 
 m1_24: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'}, who:'Лиса',
@@ -152,10 +166,10 @@ m1_26: { bg:'mos_shop',
 m1_27: { bg:'mos_shop',
   text:'По дороге домой в наушниках звучит меланхоличная песня Шэнь Лу — участника бойз-бенда той самой компании, куда я еду. Его голос вписывается в ритм моих шагов.', next:'m1_28' },
 
-m1_28: { bg:'mos_room',
+m1_28: { bg:'mos_easel',
   text:'Дома я достаю краски. Первый мазок — и постепенно появляется его образ. Я рисую по памяти, из клипов. Сердце бьётся чуть быстрее, а мир вокруг будто перестаёт существовать.', next:'m1_29' },
 
-m1_29: { bg:'mos_room',
+m1_29: { bg:'mos_easel',
   text:'Когда картина готова, я делаю шаг назад. Его взгляд — внимательный, спокойный, будто он действительно смотрит на меня. Я улыбаюсь, хотя сама не понимаю почему.', flags:['нарисовала_шэня'], next:'m1_30' },
 
 /* ---------- прощание и перелёт ---------- */
@@ -182,7 +196,7 @@ m1_34: { bg:'mos_room',
 m1_35a: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'}, who:'Лиса',
   text:'— Никто не бывает готов. Просто в какой-то момент ты берёшь и делаешь шаг. А если что — я тебя из-под земли достану и поддержу.', next:'m1_36' },
 
-m1_35b: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'},
+m1_35b: { bg:'mos_room',
   text:'Лиса на секунду замолкает — редкий случай. Потом фыркает, чтобы скрыть, что растрогалась.', next:'m1_35b2' },
 m1_35b2: { bg:'mos_room', sprite:{char:'lisa', emo:'happy'}, who:'Лиса',
   text:'— Так, только не реви мне тут. Тушь потечёт, а тебе ещё сторис в аэропорту снимать.', next:'m1_36' },
@@ -216,7 +230,7 @@ window.STORIES['book'] = {
   id: 'book',
   title: 'Ты меня не спасёшь',
   subtitle: 'по книге · Москва → Пекин · реалити-шоу',
-  cover: null,
+  cover: 'book_room.jpg',
   accent: '#5b7db5',
   start: 'pro_01',
   chars: CHARS,
