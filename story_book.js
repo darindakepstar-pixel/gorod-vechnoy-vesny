@@ -21,9 +21,11 @@ const CHARS = {
 const BACKGROUNDS = {
   mos_room:  { name: 'Комната в Москве',    img:'book_room.jpg' },
   mos_curb:  { name: 'Бордюр у дамбы',      img:'bg_mos_curb.jpg' },
-  mos_bath:  { name: 'Ванная',              img:'bg_mos_bath.jpg' },
-  mos_easel: { name: 'У мольберта',         img:'bg_mos_easel.jpg' },
+  mos_bath:  { name: 'Ванная',              img:'bg_mos_bath.jpg', css:'repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 40px, transparent 40px 43px), linear-gradient(180deg,#4a555f 0%,#2c343b 65%,#20272c 100%)' },
+  mos_easel: { name: 'У мольберта',         img:'bg_mos_easel.jpg', css:'radial-gradient(58% 44% at 78% 18%, rgba(255,226,170,.22), transparent 62%), linear-gradient(180deg,#4b4139 0%,#2c241d 100%)' },
   lisa_home: { name: 'Гостиная Лисы',       img:'bg_lisa_home.jpg' },
+  mos_hall:  { name: 'Прихожая',            img:'bg_mos_hall.jpg' },
+  mos_living:{ name: 'Гостиная, вечер',     img:'bg_mos_living.jpg' },
   mos_kitchen:{ name:'Кухня, вечер',        img:'bg_mos_kitchen.jpg' },
   stage:     { name: 'Сцена',               img:'bg_stage.jpg' },
   mos_street:{ name: 'Улица, закат',        img:'bg_mos_street.jpg' },
@@ -40,7 +42,7 @@ const BACKGROUNDS = {
   bj_dorm:   { name: 'Общежитие',           css:'linear-gradient(180deg,#3e3a44,#26232c)' },
   bj_dressing:{ name:'Гримёрка',            img:'bg_bj_dressing.jpg' },
   bj_hall:   { name: 'Зал, реалити-шоу',    css:'linear-gradient(180deg,#4a4458,#2a2636)' },
-  bj_studio: { name: 'Студия звукозаписи',  img:'bg_bj_studio.jpg' },
+  bj_studio: { name: 'Студия звукозаписи',  img:'bg_bj_studio.jpg', css:'radial-gradient(88% 58% at 50% 10%, rgba(91,125,181,.32), transparent 60%), radial-gradient(70% 45% at 50% 100%, rgba(255,150,90,.12), transparent 70%), linear-gradient(180deg,#1b1622 0%,#0f0c14 100%)' },
 };
 
 const SCENES = {
