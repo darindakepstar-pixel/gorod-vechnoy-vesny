@@ -87,14 +87,21 @@ let state, typing = null, typeFull = '', typeDone = null,
     speed = 22, debugOn = false, playerId = null, nickname = '',
     cardTimer = null, cardAfter = null;
 
-const STAT_NAMES = { lang:'китайский', money:'деньги', rep:'репутация' };
+/* статы и симпатия берём из активной истории (STORY.stats / STORY.love) */
+function statList(){ return (STORY && STORY.stats) ? STORY.stats : []; }
+function loveList(){ return (STORY && STORY.love) ? STORY.love : []; }
+function statName(k){ const s=statList().find(x=>x.key===k); return s?s.name:null; }
+function loveName(k){ const l=loveList().find(x=>x.key===k); return l?l.name:null; }
+function autoSlot(){ return 'auto_' + (STORY ? STORY.id : 'x'); }
 
 /* ---------- состояние ---------- */
 function fresh(){
+  const st={}, lv={};
+  statList().forEach(s => st[s.key]=0);
+  loveList().forEach(l => lv[l.key]=0);
   return { story: STORY ? STORY.id : 'kunming',
            scene: STORY ? STORY.start : 'ch1_01',
-           love:{lei:0,tank:0,shen:0},
-           stats:{lang:0, money:0, rep:0}, flags:[], chapter:'',
+           love: lv, stats: st, flags:[], chapter:'',
            log:[], seen:[], playedMs:0 };
 }
 
@@ -102,8 +109,8 @@ function totalScenes(){ return Object.keys(SCENES).length; }
 
 /* ---------- статы и всплывающие уведомления ---------- */
 function paintStats(){
-  $('stats').innerHTML = Object.keys(STAT_NAMES)
-    .map(k => `<div class="stat">${STAT_NAMES[k]}<b>${state.stats[k]}</b></div>`).join('');
+  $('stats').innerHTML = statList()
+    .map(s => `<div class="stat">${s.name}<b>${(state.stats && state.stats[s.key]) || 0}</b></div>`).join('');
 }
 
 function toast(txt){
@@ -117,7 +124,7 @@ function applyStats(obj){
   for(const k in obj){
     if(!(k in state.stats)) continue;
     state.stats[k] += obj[k];
-    toast(`${STAT_NAMES[k]} ${obj[k] > 0 ? '+' : ''}${obj[k]}`);
+    toast(`${statName(k) || k} ${obj[k] > 0 ? '+' : ''}${obj[k]}`);
   }
   paintStats();
 }
@@ -256,9 +263,10 @@ function spriteFallback(img, char, emo){
 
 function paintDebug(){
   if(!debugOn) return;
+  const love = loveList().map(l => `${l.name}: ${state.love[l.key]||0}`).join('<br>') || '—';
+  const stat = statList().map(s => `${s.name}: ${state.stats[s.key]||0}`).join(' · ') || '—';
   $('debug').innerHTML =
-    `<b>симпатия</b><br>Лэй: ${state.love.lei}<br>Танк: ${state.love.tank}<br>Шэнь: ${state.love.shen}
-     <br><b>статы</b><br>кит: ${state.stats.lang} · деньги: ${state.stats.money} · реп: ${state.stats.rep}
+    `<b>симпатия</b><br>${love}<br><b>статы</b><br>${stat}
      <br><b>сцена</b><br>${state.scene}
      <br><b>флаги</b><br>${state.flags.length ? state.flags.slice(-6).join('<br>') : '—'}`;
 }
@@ -335,8 +343,10 @@ function meetsReq(req){
   return true;
 }
 function reqLabel(req){
-  const names = {...STAT_NAMES, lei:'близость с Лэем', tank:'близость с Танком', shen:'близость с Шэнем'};
-  return Object.keys(req).map(k => `${names[k]||k} ${req[k]}+`).join(', ');
+  return Object.keys(req).map(k => {
+    const n = statName(k) || (loveName(k) ? 'близость: ' + loveName(k) : k);
+    return `${n} ${req[k]}+`;
+  }).join(', ');
 }
 
 function renderChoices(list){
@@ -403,8 +413,10 @@ function advance(e){
 
 /* ---------- сохранения ---------- */
 function autosave(){
-  localStorage.setItem(LS+'auto', JSON.stringify(state));
-  CL.push('auto', state);
+  const slot = autoSlot();
+  localStorage.setItem(LS+slot, JSON.stringify(state));
+  CL.push(slot, state);
+  CL.push('auto', state);   /* общий слот для доски «кто как далеко» */
 }
 
 /* счётчик времени в игре */
@@ -438,13 +450,22 @@ async function load(slot){
 }
 
 /* ---------- запуск ---------- */
-async function start(cont){
-  const box = $('localbox');
-  if(box.style.display !== 'none'){
-    nickname = ($('nick2').value || 'без имени').trim();
+function captureName(){
+  if(!CL.on()){
+    nickname = (($('nick2') && $('nick2').value) || localStorage.getItem(LS+'nick') || 'без имени').trim();
     localStorage.setItem(LS+'nick', nickname);
   }
-  if(cont){ await load('auto'); startClock(); return; }
+}
+
+/* остаётся для меню и «начать заново» — работает с текущей историей */
+async function start(cont){
+  const id = STORY ? STORY.id : 'kunming';
+  return cont ? continueStory(id) : newStory(id);
+}
+
+function newStory(id){
+  pickStoryQuiet(id);
+  captureName();
   state = fresh();
   paintStats();
   $('title').style.display = 'none';
@@ -452,48 +473,100 @@ async function start(cont){
   show(state.scene);
 }
 
+async function continueStory(id){
+  pickStoryQuiet(id);
+  captureName();
+  await load(autoSlot());        /* load сам прячет титул и показывает сцену */
+  startClock();
+}
+
+function confirmRestart(id){
+  if(confirm('Начать эту историю заново? Сохранение по ней перезапишется.')) newStory(id);
+}
+
+function pickStoryQuiet(id){
+  const s = (window.STORIES||{})[id];
+  if(s && !s.soon){ loadStory(id); setTitleBg(); }
+}
+
+function setTitleBg(){
+  const f = (STORY && (STORY.titleBg || STORY.cover)) || 'bg_title.jpg';
+  const im = new Image();
+  im.onload = () => { $('title').style.backgroundImage = `url(${ART}${f})`; };
+  im.src = ART + f;
+}
+
 /* ---------- вход и профиль ---------- */
 function authErr(msg){ $('autherr').textContent = msg || ''; }
 
 function showTitleMode(){
   const cloud = CL.on(), me = CL.user();
-  $('authbox').style.display    = (cloud && !me) ? 'flex' : 'none';
-  $('localbox').style.display   = (!cloud) ? 'flex' : 'none';
-  $('profilebox').style.display = (cloud && me) ? 'flex' : 'none';
-  $('cloudstate').textContent   = cloud
-    ? (me ? 'аккаунт подключён' : 'облако подключено')
-    : (CLOUD_MISSING
-        ? 'файл cloud.js не найден · аккаунты выключены'
-        : 'локальный режим · сохранения только на этом устройстве');
-  if(cloud && me) paintProfile();
+  const strip = $('tstrip');
+  if(strip){
+    if(cloud && me){
+      strip.innerHTML = `<span class="tuser">Привет, ${nickname || 'друг'}!</span>
+        <span class="tacts">
+          <button class="tlink" onclick="Game.openBoard()">Кто как далеко</button>
+          <button class="tlink" onclick="Game.doLogout()">Выйти</button></span>`;
+    } else if(cloud){
+      strip.innerHTML = `<span class="tuser">Гость</span>
+        <span class="tacts"><button class="tlink" onclick="Game.showAuth()">Войти · создать аккаунт</button></span>`;
+    } else {
+      strip.innerHTML = `<span class="tuser">Локальный режим</span>`;
+    }
+  }
+  if($('nick2')) $('nick2').style.display = cloud ? 'none' : 'block';
+  if($('tauth'))  $('tauth').classList.remove('on');
+  $('cloudstate').textContent = cloud
+    ? (me ? 'аккаунт подключён · прогресс в облаке'
+          : 'войди — прогресс сохранится, и друзья увидят, кто как далеко')
+    : (CLOUD_MISSING ? 'файл cloud.js не найден · аккаунты выключены'
+                     : 'локальный режим · сохранения только на этом устройстве');
+  authErr('');
+  renderStoryCards();
 }
 
-async function paintProfile(){
-  const c = $('profcard');
-  c.innerHTML = '<div style="opacity:.6;font-size:13px">Загружаю…</div>';
-  const st = await CL.myStats();
-  if(!st){ c.innerHTML = '<div style="opacity:.6;font-size:13px">Не удалось получить данные.</div>'; return; }
-  const s = st.state || {};
-  const seen = (s.seen || []).length;
-  const pct = Math.round(seen / Math.max(totalScenes(),1) * 100);
-  const mins = Math.round((s.playedMs || 0) / 60000);
-  const when = st.updated ? new Date(st.updated).toLocaleString('ru-RU',
-      {day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'}) : '—';
-  c.innerHTML = `
-    <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:10px">${st.nickname || 'Ты'}</div>
-    <div class="pline"><span>Остановилась на</span><b>${s.chapter || 'самом начале'}</b></div>
-    <div class="pline"><span>Прочитано сцен</span><b>${seen} из ${totalScenes()}</b></div>
-    <div class="pline"><span>Время в игре</span><b>${mins} мин</b></div>
-    <div class="pline"><span>Найдено концовок</span><b>${st.endings}</b></div>
-    <div class="pline"><span>Последний раз</span><b style="font-weight:400;color:#fff;opacity:.8">${when}</b></div>
-    <div class="bar"><i style="width:${pct}%"></i></div>`;
+function renderStoryCards(){
+  const box = $('tstories'); if(!box) return;
+  const stories = Object.values(window.STORIES || {});
+  box.innerHTML = stories.map(s => {
+    let status = '', actions = '';
+    const raw = localStorage.getItem(LS + 'auto_' + s.id);
+    if(s.soon){
+      status = 'в разработке';
+      actions = `<button class="abtn ghost" disabled style="opacity:.5">скоро</button>`;
+    } else if(raw){
+      let st = {}; try{ st = JSON.parse(raw); }catch(e){}
+      const seen = (st.seen || []).length;
+      status = `продолжаешь · ${st.chapter || 'начало'} · ${seen} сцен`;
+      actions = `<button class="abtn" onclick="Game.continueStory('${s.id}')">Продолжить</button>
+                 <button class="abtn ghost" onclick="Game.confirmRestart('${s.id}')">Заново</button>`;
+    } else {
+      status = 'ещё не начата';
+      actions = `<button class="abtn" onclick="Game.newStory('${s.id}')">Начать</button>`;
+    }
+    const cov = s.cover
+      ? `background-image:url(art/${s.cover})`
+      : `background:linear-gradient(160deg,${s.accent},#1a1420)`;
+    return `<div class="lcard ${s.soon ? 'soon' : ''}">
+        <div class="lcover" style="${cov}"></div>
+        <div class="lbody">
+          <b>${s.title}</b>
+          <i>${s.subtitle || ''}</i>
+          <span class="lstatus">${status}</span>
+          <div class="lactions">${actions}</div>
+        </div></div>`;
+  }).join('');
 }
+
+function showAuth(){ if($('tauth')) $('tauth').classList.add('on'); }
+function hideAuth(){ if($('tauth')) $('tauth').classList.remove('on'); }
 
 async function doLogin(){
   authErr('');
   const n = $('nick').value.trim(), p = $('pass').value;
   if(!n || p.length < 6) return authErr('Нужно имя и пароль хотя бы из 6 знаков.');
-  try{ await CL.signIn(n, p); showTitleMode(); }
+  try{ await CL.signIn(n, p); nickname = n; localStorage.setItem(LS+'nick', n); hideAuth(); showTitleMode(); }
   catch(e){ authErr(e.status === 400 ? 'Неверное имя или пароль.' : 'Не вышло войти: ' + e.message); }
 }
 
@@ -501,12 +574,12 @@ async function doRegister(){
   authErr('');
   const n = $('nick').value.trim(), p = $('pass').value;
   if(!n || p.length < 6) return authErr('Нужно имя и пароль хотя бы из 6 знаков.');
-  try{ await CL.signUp(n, p); showTitleMode(); }
+  try{ await CL.signUp(n, p); nickname = n; localStorage.setItem(LS+'nick', n); hideAuth(); showTitleMode(); }
   catch(e){ authErr(e.status === 422 ? 'Такое имя уже занято.' : e.message); }
 }
 
 function doLogout(){ CL.signOut(); showTitleMode(); }
-function playLocal(){ $('authbox').style.display='none'; $('localbox').style.display='flex'; }
+function playLocal(){ hideAuth(); }
 function confirmNew(){
   if(confirm('Начать заново? Текущее сохранение перезапишется.')) start(false);
 }
@@ -603,12 +676,8 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
   const n = localStorage.getItem(LS+'nick');
   if(n){ $('nick').value = n; $('nick2').value = n; }
   const sp = localStorage.getItem(LS+'speed'); if(sp){ speed = +sp; $('speed').value = sp; }
-  /* фон титульного экрана, если картинка есть */
-  const tbg = new Image();
-  tbg.onload = () => { $('title').style.backgroundImage = `url(${ART}bg_title.jpg)`; };
-  tbg.src = ART + 'bg_title.jpg';
-
   loadStory('kunming');   /* история по умолчанию */
+  setTitleBg();
 
   /* заранее греем первые сцены, чтобы старт был мгновенным */
   ['ch1_01','ch1_02','ch1_10','ch1_23'].forEach(id => {
@@ -625,13 +694,13 @@ function toggleDebug(){ debugOn = !debugOn; $('debug').classList.toggle('on', de
  } catch(err) {
   /* что бы ни сломалось при запуске — титул должен остаться рабочим */
   console.error('Сбой при запуске:', err);
-  $('localbox').style.display = 'flex';
-  $('cloudstate').textContent = 'сбой при запуске: ' + err.message;
+  const cs = $('cloudstate'); if(cs) cs.textContent = 'сбой при запуске: ' + err.message;
  }
 })();
 
 return { start, advance, save, load, openMenu, openLog, openGallery, closeAll,
          setSpeed, toggleDebug, toTitle, spriteFallback, skipCard,
          doLogin, doRegister, doLogout, playLocal, confirmNew, openBoard, quitGame,
-         openStories, pickStory };
+         openStories, pickStory,
+         newStory, continueStory, confirmRestart, showAuth, hideAuth, renderStoryCards };
 })();
