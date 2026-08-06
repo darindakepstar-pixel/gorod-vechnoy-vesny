@@ -118,11 +118,12 @@ async function markEnding(id){
 }
 
 /* ---------- статистика ---------- */
-async function myStats(){
+async function myStats(slot){
+  slot = slot || 'auto';
   if(!on() || !session) return null;
   try{
     const [saves, ends, prof] = await Promise.all([
-      api(`/rest/v1/saves?user_id=eq.${session.user.id}&slot=eq.auto&select=state,updated_at`),
+      api(`/rest/v1/saves?user_id=eq.${session.user.id}&slot=eq.${slot}&select=state,updated_at`),
       api(`/rest/v1/endings?user_id=eq.${session.user.id}&select=ending_id`),
       api(`/rest/v1/profiles?id=eq.${session.user.id}&select=nickname`)
     ]);
