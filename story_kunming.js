@@ -2215,6 +2215,16 @@ window.STORIES['kunming'] = {
   cover: 'bg_title.jpg',          // обложка на экране выбора
   accent: '#ff7ab8',              // палитра истории
   start: 'ch1_01',
+  stats: [                        // видимые статы ЭТОЙ истории
+    { key:'lang',  name:'китайский' },
+    { key:'money', name:'деньги' },
+    { key:'rep',   name:'репутация' },
+  ],
+  love: [                         // к кому копится близость
+    { key:'lei',  name:'Лэй' },
+    { key:'tank', name:'Танк' },
+    { key:'shen', name:'Шэнь' },
+  ],
   chars: CHARS,
   backgrounds: BACKGROUNDS,
   scenes: SCENES,
